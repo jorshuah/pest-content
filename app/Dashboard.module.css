@@ -1,0 +1,101 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+    border-radius: var(--radius);
+    padding: var(--spacing-2xl);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.heroContent {
+    max-width: 600px;
+}
+
+.title {
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-sm);
+    letter-spacing: -0.025em;
+    color: white;
+    /* Force white over gradient */
+}
+
+.subtitle {
+    color: rgba(255, 255, 255, 0.85);
+    /* Slightly transparent white */
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.actionButton {
+    background-color: white;
+    /* Inverted for the dark hero bg */
+    color: var(--brand);
+    padding: 0.875rem 1.75rem;
+    /* Slightly larger padding for a prominent CTA */
+    border-radius: var(--radius);
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.actionButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    background-color: #f8fafc;
+}
+
+.actionButton:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.bentoGrid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--spacing-lg);
+    align-items: start;
+}
+
+.bentoTodaysBatch {
+    grid-column: span 12;
+}
+
+.bentoStats {
+    grid-column: span 12;
+}
+
+/* On large screens, split focus and calendar */
+@media (min-width: 1024px) {
+    .bentoFocus {
+        grid-column: span 5;
+    }
+
+    .bentoCalendar {
+        grid-column: span 7;
+    }
+}
+
+/* Mobile fallback */
+@media (max-width: 1023px) {
+
+    .bentoFocus,
+    .bentoCalendar {
+        grid-column: span 12;
+    }
+}

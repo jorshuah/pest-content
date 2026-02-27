@@ -1,0 +1,27 @@
+.container {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--background);
+    /* Main app shell runs a darker/muted background */
+    padding: var(--spacing-md);
+    gap: var(--spacing-md);
+}
+
+.main {
+    flex: 1;
+    margin-left: 280px;
+    /* Sidebar is 280px wide */
+    background-color: var(--card);
+    /* The content canvas uses the bright/solid card background */
+    border-radius: 1.5rem;
+    /* Generous rounding for the island */
+    border: 1px solid var(--border);
+    min-height: calc(100vh - 2 * var(--spacing-md));
+    padding: var(--spacing-2xl);
+    /* Inner canvas breathing room */
+    box-shadow: var(--shadow-md);
+    /* Give the island depth */
+    overflow-y: auto;
+    overflow-x: auto;
+    min-width: 0;
+}

@@ -1,0 +1,115 @@
+.bentoStatsContainer {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+@media (min-width: 1024px) {
+    .bentoStatsContainer {
+        grid-template-columns: 1fr 2fr;
+    }
+}
+
+.primaryCard {
+    background: linear-gradient(135deg, #020817 0%, #1e293b 100%);
+    color: white;
+    border-radius: var(--radius);
+    padding: var(--spacing-2xl);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: var(--shadow-md);
+    transition: all 0.2s ease;
+}
+
+.primaryCard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+.primaryLabel {
+    font-size: 1rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.primaryValue {
+    font-size: 4rem;
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    margin: var(--spacing-md) 0;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.primaryTrend {
+    font-size: 0.875rem;
+    color: var(--brand);
+    /* Bright pop against dark card */
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 600;
+}
+
+.secondaryGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-lg);
+}
+
+.secondaryCard {
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+}
+
+.secondaryCard:last-child {
+    grid-column: span 2;
+    /* Make the 3rd card span full width for symmetry */
+}
+
+.secondaryCard:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+}
+
+.value {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--foreground);
+    letter-spacing: -0.05em;
+    font-variant-numeric: tabular-nums;
+}
+
+.trend {
+    font-size: 0.75rem;
+    color: var(--status-posted);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.trendDown {
+    color: var(--destructive);
+}

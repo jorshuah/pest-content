@@ -1,0 +1,132 @@
+.calendarContainer {
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow-x: auto;
+    overflow-y: visible;
+    min-width: 0;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--border);
+}
+
+.monthTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.navigation {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.navButton {
+    background-color: var(--muted);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.navButton:hover {
+    background-color: var(--accent);
+    border-color: var(--ring);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(100px, 1fr));
+    min-width: 700px;
+}
+
+.dayHeader {
+    padding: var(--spacing-sm);
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    background-color: var(--secondary);
+}
+
+.dayCell {
+    min-height: 120px;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    padding: var(--spacing-xs);
+    position: relative;
+}
+
+.dayNumber {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    margin-bottom: var(--spacing-xs);
+    display: block;
+}
+
+.batch {
+    margin-top: 4px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background-color: var(--status-draft);
+    color: #0f172a;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.batch:hover {
+    opacity: 0.9;
+}
+
+.batchProfiles {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.65rem;
+    line-height: 1.2;
+}
+
+.batchProfile {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.event {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.eventDraft {
+    background-color: var(--status-draft);
+    color: black;
+}
+
+.eventScheduled {
+    background-color: var(--status-scheduled);
+    color: white;
+}
+
+.eventPosted {
+    background-color: var(--status-posted);
+    color: white;
+}
