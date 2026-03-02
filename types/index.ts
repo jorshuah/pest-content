@@ -11,5 +11,6 @@ export interface Account {
     platform: ('FB' | 'IG' | 'In')[];
     monthlyPostTarget: number;
     currentMonthPosts: number;
+    postedCount?: number; // Number of posts marked as Posted this month
     status: 'active' | 'inactive';
 }

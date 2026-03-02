@@ -50,7 +50,14 @@ export default function AccountCard({ account, onEdit }: AccountCardProps) {
             <div className={styles.metrics}>
                 <div className={styles.progressLabel}>
                     <span>Monthly Posts</span>
-                    <span>{account.currentMonthPosts} / {account.monthlyPostTarget}</span>
+                    <span>
+                        {account.currentMonthPosts} / {account.monthlyPostTarget}
+                        {typeof account.postedCount === "number" && (
+                            <span className={styles.postedCount} title="Posted to social">
+                                · {account.postedCount} posted
+                            </span>
+                        )}
+                    </span>
                 </div>
                 <div className={styles.progressBarTrack}>
                     <div

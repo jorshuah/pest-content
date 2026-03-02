@@ -122,6 +122,16 @@
     color: var(--muted-foreground);
 }
 
+.postedBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--status-posted);
+    margin-left: 4px;
+}
+
 .chevron {
     color: var(--muted-foreground);
     flex-shrink: 0;

@@ -30,12 +30,44 @@ export function getPostCountsPerAccountForMonth(month: number, year: number): Re
     return result;
 }
 
+/** Returns posted count (status='Posted') per account_id for the given month (1–12) and year. */
+export function getPostedCountPerAccountForMonth(month: number, year: number): Record<string, number> {
+    const prefix = `${year}-${String(month).padStart(2, '0')}`;
+    const stmt = db.prepare(`
+        SELECT account_id, COUNT(*) as cnt
+        FROM posts
+        WHERE substr(date, 1, 7) = ? AND status = 'Posted'
+        GROUP BY account_id
+    `);
+    const rows = stmt.all(prefix) as { account_id: string; cnt: number }[];
+    const result: Record<string, number> = {};
+    for (const r of rows) result[r.account_id] = r.cnt;
+    return result;
+}
+
+/** Update a post's status. */
+export function updatePostStatus(postId: string, status: 'Draft' | 'Scheduled' | 'Posted') {
+    db.prepare('UPDATE posts SET status = ? WHERE id = ?').run(status, postId);
+}
+
+/** Get status for multiple post IDs. Returns map of postId -> status. */
+export function getPostStatuses(postIds: string[]): Record<string, string> {
+    if (postIds.length === 0) return {};
+    const placeholders = postIds.map(() => '?').join(',');
+    const stmt = db.prepare(`SELECT id, status FROM posts WHERE id IN (${placeholders})`);
+    const rows = stmt.all(...postIds) as { id: string; status: string }[];
+    const result: Record<string, string> = {};
+    for (const r of rows) result[r.id] = r.status;
+    return result;
+}
+
 export function getAccounts(): Account[] {
     const stmt = db.prepare('SELECT * FROM accounts');
     const rows = stmt.all() as any[];
 
     const now = new Date();
     const counts = getPostCountsPerAccountForMonth(now.getMonth() + 1, now.getFullYear());
+    const postedCounts = getPostedCountPerAccountForMonth(now.getMonth() + 1, now.getFullYear());
 
     return rows.map(row => ({
         id: row.id,
@@ -45,6 +77,7 @@ export function getAccounts(): Account[] {
         platform: JSON.parse(row.platform),
         monthlyPostTarget: row.monthly_post_target,
         currentMonthPosts: counts[row.id] ?? 0,
+        postedCount: postedCounts[row.id] ?? 0,
         brandColor: row.brand_color,
         status: row.status as 'active' | 'inactive'
     }));
@@ -105,23 +138,28 @@ export function saveBatchContent(accountId: string, date: Date, content: { title
     }
 }
 
-export function getSavedBatchContent(accountIds: string[], date: Date): Record<string, { title: string; hook: string; caption: string; canvaInstruction: string }> {
+export function getSavedBatchContent(
+    accountIds: string[],
+    date: Date
+): Record<string, { title: string; hook: string; caption: string; canvaInstruction: string; postId?: string; status?: string }> {
     const dateStr = date.toISOString().split('T')[0];
-    const result: Record<string, { title: string; hook: string; caption: string; canvaInstruction: string }> = {};
+    const result: Record<string, { title: string; hook: string; caption: string; canvaInstruction: string; postId?: string; status?: string }> = {};
 
     for (const accountId of accountIds) {
         const row = db.prepare(`
-            SELECT title, caption, canva_instruction, hook FROM posts
+            SELECT id, title, caption, canva_instruction, hook, status FROM posts
             WHERE account_id = ? AND date LIKE ?
             LIMIT 1
-        `).get(accountId, `${dateStr}%`) as { title: string; caption: string; canva_instruction: string; hook?: string } | undefined;
+        `).get(accountId, `${dateStr}%`) as { id: string; title: string; caption: string; canva_instruction: string; hook?: string; status?: string } | undefined;
 
         if (row && row.title) {
             result[accountId] = {
                 title: row.title,
                 hook: row.hook || '',
                 caption: row.caption || '',
-                canvaInstruction: row.canva_instruction || ''
+                canvaInstruction: row.canva_instruction || '',
+                postId: row.id,
+                status: row.status || 'Draft'
             };
         }
     }

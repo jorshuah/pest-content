@@ -1,9 +1,9 @@
 "use client";
 
-import { X, MapPin, Bug, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { X, MapPin, Bug, Sparkles, ChevronDown, ChevronUp, CheckCircle2, Circle } from "lucide-react";
 import { CalendarBatch } from "@/lib/rotation-engine";
 import { useState, useEffect } from "react";
-import { generateBatchContent, fetchSavedBatchContent } from "@/app/actions";
+import { generateBatchContent, fetchSavedBatchContent, togglePostPosted } from "@/app/actions";
 
 interface ProfileContent {
     accountId: string;
@@ -11,6 +11,8 @@ interface ProfileContent {
     hook: string;
     caption: string;
     canvaInstruction: string;
+    postId?: string;
+    status?: string;
 }
 
 interface BatchDetailModalProps {
@@ -23,6 +25,7 @@ export default function BatchDetailModal({ isOpen, onClose, batch }: BatchDetail
     const [contentByProfile, setContentByProfile] = useState<Record<string, ProfileContent>>({});
     const [isGenerating, setIsGenerating] = useState(false);
     const [expandedId, setExpandedId] = useState<string | null>(null);
+    const [togglingId, setTogglingId] = useState<string | null>(null);
 
     useEffect(() => {
         if (!isOpen || !batch) {
@@ -69,6 +72,26 @@ export default function BatchDetailModal({ isOpen, onClose, batch }: BatchDetail
             console.error(err);
         } finally {
             setIsGenerating(false);
+        }
+    };
+
+    const handleTogglePosted = async (accountId: string) => {
+        const content = contentByProfile[accountId];
+        if (!content?.postId) return;
+        setTogglingId(accountId);
+        try {
+            await togglePostPosted(content.postId);
+            setContentByProfile((prev) => ({
+                ...prev,
+                [accountId]: {
+                    ...prev[accountId],
+                    status: prev[accountId].status === "Posted" ? "Draft" : "Posted"
+                }
+            }));
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setTogglingId(null);
         }
     };
 
@@ -170,45 +193,68 @@ export default function BatchDetailModal({ isOpen, onClose, batch }: BatchDetail
                                         backgroundColor: 'var(--muted)'
                                     }}
                                 >
-                                    <button
-                                        onClick={() => setExpandedId(isExpanded ? null : account.id)}
-                                        style={{
-                                            width: '100%',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '1rem',
-                                            padding: '0.75rem 1rem',
-                                            border: 'none',
-                                            background: 'none',
-                                            cursor: 'pointer',
-                                            color: 'inherit',
-                                            textAlign: 'left'
-                                        }}
-                                    >
-                                        <div
+                                    <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                        <button
+                                            onClick={() => setExpandedId(isExpanded ? null : account.id)}
                                             style={{
-                                                width: 36,
-                                                height: 36,
-                                                borderRadius: '50%',
-                                                backgroundColor: account.brandColor || 'var(--brand)',
+                                                flex: 1,
                                                 display: 'flex',
                                                 alignItems: 'center',
-                                                justifyContent: 'center',
-                                                color: 'white',
-                                                fontWeight: 600,
-                                                fontSize: '0.875rem'
+                                                gap: '1rem',
+                                                padding: '0.75rem 1rem',
+                                                border: 'none',
+                                                background: 'none',
+                                                cursor: 'pointer',
+                                                color: 'inherit',
+                                                textAlign: 'left'
                                             }}
                                         >
-                                            {account.name.charAt(0)}
-                                        </div>
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ fontWeight: 600 }}>{account.name}</div>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)' }}>
-                                                <MapPin size={12} style={{ display: 'inline', verticalAlign: -2 }} /> {county} · <Bug size={12} style={{ display: 'inline', verticalAlign: -2 }} /> {suggestedPest} · <span style={{ fontWeight: 500 }}>{tone}</span>
+                                            <div
+                                                style={{
+                                                    width: 36,
+                                                    height: 36,
+                                                    borderRadius: '50%',
+                                                    backgroundColor: account.brandColor || 'var(--brand)',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    color: 'white',
+                                                    fontWeight: 600,
+                                                    fontSize: '0.875rem'
+                                                }}
+                                            >
+                                                {account.name.charAt(0)}
                                             </div>
-                                        </div>
-                                        {content && (isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />)}
-                                    </button>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ fontWeight: 600 }}>{account.name}</div>
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)' }}>
+                                                    <MapPin size={12} style={{ display: 'inline', verticalAlign: -2 }} /> {county} · <Bug size={12} style={{ display: 'inline', verticalAlign: -2 }} /> {suggestedPest} · <span style={{ fontWeight: 500 }}>{tone}</span>
+                                                </div>
+                                            </div>
+                                            {content && (isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />)}
+                                        </button>
+                                        {content?.postId && (
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleTogglePosted(account.id); }}
+                                                disabled={togglingId === account.id}
+                                                title={content.status === 'Posted' ? 'Mark as not posted' : 'Mark as posted'}
+                                                style={{
+                                                    padding: '0.5rem',
+                                                    border: 'none',
+                                                    background: 'none',
+                                                    cursor: togglingId === account.id ? 'wait' : 'pointer',
+                                                    color: content.status === 'Posted' ? 'var(--status-posted)' : 'var(--muted-foreground)',
+                                                    flexShrink: 0
+                                                }}
+                                            >
+                                                {content.status === 'Posted' ? (
+                                                    <CheckCircle2 size={24} fill="var(--status-posted)" />
+                                                ) : (
+                                                    <Circle size={24} />
+                                                )}
+                                            </button>
+                                        )}
+                                    </div>
 
                                     {content && isExpanded && (
                                         <div style={{ padding: '1rem', borderTop: '1px solid var(--border)', backgroundColor: 'var(--card)' }}>

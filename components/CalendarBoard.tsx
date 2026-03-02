@@ -18,6 +18,8 @@ export default function CalendarBoard({ currentDate, batches, onMonthChange, onB
 
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const firstDay = new Date(year, month, 1).getDay(); // 0 = Sunday
+    // Exclude Sundays: 6-column grid (Mon–Sat). Leading empties: Sun=0, Mon=0, Tue=1, ..., Sat=5
+    const leadingEmpties = firstDay === 0 ? 0 : firstDay - 1;
 
     const batchByDay = new Map<number, CalendarBatch>();
     for (const b of batches) {
@@ -26,13 +28,14 @@ export default function CalendarBoard({ currentDate, batches, onMonthChange, onB
     }
 
     const days = [];
-    // Empty slots for previous month
-    for (let i = 0; i < firstDay; i++) {
+    // Empty slots for alignment (Mon–Sat grid, no Sunday)
+    for (let i = 0; i < leadingEmpties; i++) {
         days.push(<div key={`empty-${i}`} className={styles.dayCell} style={{ backgroundColor: "var(--secondary)", opacity: 0.5 }} />);
     }
 
-    // Days of the month
+    // Days of the month (skip Sundays)
     for (let d = 1; d <= daysInMonth; d++) {
+        if (new Date(year, month, d).getDay() === 0) continue; // Skip Sunday
         const batch = batchByDay.get(d);
 
         days.push(
@@ -77,7 +80,7 @@ export default function CalendarBoard({ currentDate, batches, onMonthChange, onB
             </div>
 
             <div className={styles.grid}>
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
                     <div key={day} className={styles.dayHeader}>{day}</div>
                 ))}
                 {days}

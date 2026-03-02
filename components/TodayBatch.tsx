@@ -1,7 +1,7 @@
 "use client";
 
 import { TodayBatchProfile } from "@/lib/rotation-engine";
-import { Bug, MapPin, ChevronRight } from "lucide-react";
+import { Bug, MapPin, ChevronRight, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import styles from "./TodayBatch.module.css";
 
@@ -33,7 +33,7 @@ export default function TodayBatch({ profiles }: TodayBatchProps) {
                 Work on these profiles today. Content is tailored to each area.
             </p>
             <div className={styles.profileList}>
-                {profiles.map(({ account, county, suggestedPest, pestReason, tone }) => (
+                {profiles.map(({ account, county, suggestedPest, pestReason, tone, isPosted }) => (
                     <Link
                         key={account.id}
                         href="/calendar?open=today"
@@ -55,6 +55,12 @@ export default function TodayBatch({ profiles }: TodayBatchProps) {
                                 <Bug size={14} />
                                 <span className={styles.pestLabel}>{suggestedPest}</span>
                                 <span className={styles.toneBadge}>{tone}</span>
+                                {isPosted && (
+                                    <span className={styles.postedBadge} title="Posted">
+                                        <CheckCircle2 size={14} />
+                                        Posted
+                                    </span>
+                                )}
                             </div>
                             <span className={styles.pestReason}>{pestReason}</span>
                         </div>

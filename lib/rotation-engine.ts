@@ -14,18 +14,33 @@ export interface TodayBatchProfile {
     pestReason: string;
     tone: Tone;
     slot: number; // 0-7, used for event ID
+    postId?: string;
+    isPosted?: boolean;
 }
 
-/** Get the day (1-based) for a profile's slot in a given month. Uses round-robin so posts are spread evenly across days. */
-function getDayForSlot(accountIndex: number, slotIndex: number, daysInMonth: number): number {
+/** Returns day-of-month numbers for Mon–Sat only (Sundays excluded). */
+function getWorkingDaysInMonth(year: number, month: number): number[] {
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const result: number[] = [];
+    for (let d = 1; d <= daysInMonth; d++) {
+        if (new Date(year, month, d).getDay() !== 0) result.push(d);
+    }
+    return result;
+}
+
+/** Get the day (1-based) for a profile's slot in a given month. Uses round-robin across Mon–Sat only. */
+function getDayForSlot(accountIndex: number, slotIndex: number, year: number, month: number): number {
+    const workingDays = getWorkingDaysInMonth(year, month);
     const globalSlot = accountIndex * POSTS_PER_PROFILE + slotIndex;
-    return 1 + (globalSlot % daysInMonth);
+    return workingDays[globalSlot % workingDays.length];
 }
 
 /** Get the slot index (0-7) for a profile on a given day, or -1 if profile has no post that day. */
-function getSlotForDay(accountIndex: number, day: number, daysInMonth: number): number {
+function getSlotForDay(accountIndex: number, day: number, year: number, month: number): number {
+    const workingDays = getWorkingDaysInMonth(year, month);
+    if (!workingDays.includes(day)) return -1;
     for (let s = 0; s < POSTS_PER_PROFILE; s++) {
-        if (getDayForSlot(accountIndex, s, daysInMonth) === day) return s;
+        if (getDayForSlot(accountIndex, s, year, month) === day) return s;
     }
     return -1;
 }
@@ -39,11 +54,12 @@ export function getBatchForDate(accounts: Account[], date: Date): TodayBatchProf
     const month = ['January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'][date.getMonth()] as Month;
     const day = date.getDate();
-    const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    const year = date.getFullYear();
+    const monthIndex = date.getMonth();
     const result: TodayBatchProfile[] = [];
 
     for (let i = 0; i < orderedProfiles.length; i++) {
-        const slot = getSlotForDay(i, day, daysInMonth);
+        const slot = getSlotForDay(i, day, year, monthIndex);
         if (slot < 0) continue;
 
         const account = orderedProfiles[i];
@@ -78,13 +94,13 @@ export interface CalendarBatch {
     profiles: TodayBatchProfile[];
 }
 
-/** Returns batch schedule for a month. No DB, no content gen - pure schedule. */
+/** Returns batch schedule for a month. No DB, no content gen - pure schedule. Mon–Sat only. */
 export function getMonthBatches(accounts: Account[], month: Month, year: number): CalendarBatch[] {
     const batches: CalendarBatch[] = [];
     const monthIndex = getMonthIndex(month);
-    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+    const workingDays = getWorkingDaysInMonth(year, monthIndex);
 
-    for (let day = 1; day <= daysInMonth; day++) {
+    for (const day of workingDays) {
         const date = new Date(year, monthIndex, day);
         const profiles = getBatchForDate(accounts, date);
         const counties = [...new Set(profiles.map(p => p.county))];
@@ -122,7 +138,6 @@ export async function generateMonthlyCalendar(
     year: number
 ): Promise<CalendarEvent[]> {
     const events: CalendarEvent[] = [];
-    const daysInMonth = new Date(year, getMonthIndex(month) + 1, 0).getDate();
     const monthIndex = getMonthIndex(month);
     const orderedAccounts = [...accounts].sort((a, b) => a.id.localeCompare(b.id));
 
@@ -135,7 +150,7 @@ export async function generateMonthlyCalendar(
         if (accountPests.length === 0) continue;
 
         for (let slot = 0; slot < POSTS_PER_PROFILE; slot++) {
-            const day = getDayForSlot(accountIndex, slot, daysInMonth);
+            const day = getDayForSlot(accountIndex, slot, year, monthIndex);
             const date = new Date(year, monthIndex, day);
             const pest = accountPests[(account.id.length + slot) % accountPests.length] || { pest: 'General Pests', reason: 'Routine' };
             const tone = TONES[Math.floor(slot / 2)];

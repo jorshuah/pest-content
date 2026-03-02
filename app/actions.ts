@@ -1,6 +1,6 @@
 "use server";
 
-import { getAccounts as repoGetAccounts, createAccount as repoCreateAccount, updateAccount as repoUpdateAccount, saveCalendarEvent, getCalendarEventsForMonth, getContentTemplates, getSettings, updateSetting, getDailyAnalytics, resetDatabase } from "@/lib/repository";
+import { getAccounts as repoGetAccounts, createAccount as repoCreateAccount, updateAccount as repoUpdateAccount, saveCalendarEvent, getCalendarEventsForMonth, getContentTemplates, getSettings, updateSetting, getDailyAnalytics, resetDatabase, updatePostStatus, getPostStatuses } from "@/lib/repository";
 import { Account } from "@/types";
 import { revalidatePath } from "next/cache";
 import { generateMonthlyCalendar, getTodaysBatch, getMonthBatches } from "@/lib/rotation-engine";
@@ -139,7 +139,26 @@ export async function fetchSavedBatchContent(accountIds: string[], date: Date) {
 
 export async function fetchTodaysBatch() {
     const accounts = repoGetAccounts();
-    return getTodaysBatch(accounts);
+    const profiles = getTodaysBatch(accounts);
+    const today = new Date();
+    const day = today.getDate();
+    const postIds = profiles.map((p) => `${p.account.id}-${day}-${p.slot}`);
+    const statuses = getPostStatuses(postIds);
+    return profiles.map((p) => {
+        const postId = `${p.account.id}-${day}-${p.slot}`;
+        return { ...p, postId, isPosted: statuses[postId] === "Posted" };
+    });
+}
+
+export async function togglePostPosted(postId: string) {
+    const statuses = getPostStatuses([postId]);
+    const current = statuses[postId];
+    const next = current === "Posted" ? "Draft" : "Posted";
+    updatePostStatus(postId, next);
+    revalidatePath("/");
+    revalidatePath("/calendar");
+    revalidatePath("/accounts");
+    return { success: true, status: next };
 }
 
 export async function fetchDashboardStats() {

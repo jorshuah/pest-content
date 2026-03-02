@@ -85,6 +85,12 @@
     color: var(--muted-foreground);
 }
 
+.postedCount {
+    margin-left: 0.25rem;
+    color: var(--status-posted);
+    font-weight: 500;
+}
+
 .progressBarTrack {
     height: 8px;
     width: 100%;

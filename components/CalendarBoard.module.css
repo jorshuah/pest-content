@@ -45,8 +45,8 @@
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(7, minmax(100px, 1fr));
-    min-width: 700px;
+    grid-template-columns: repeat(6, minmax(100px, 1fr));
+    min-width: 600px;
 }
 
 .dayHeader {
