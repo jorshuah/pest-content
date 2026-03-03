@@ -15,7 +15,10 @@ export interface ContentTemplate {
 // Ensure DB is initialized
 initDb();
 
-/** Returns post count per account_id for the given month (1–12) and year. */
+/**
+ * Returns post count per account_id for the given month (1–12) and year.
+ * Counts from posts table = days already generated. Used for rotation so we only schedule remaining slots.
+ */
 export function getPostCountsPerAccountForMonth(month: number, year: number): Record<string, number> {
     const prefix = `${year}-${String(month).padStart(2, '0')}`;
     const stmt = db.prepare(`
@@ -48,6 +51,11 @@ export function getPostedCountPerAccountForMonth(month: number, year: number): R
 /** Update a post's status. */
 export function updatePostStatus(postId: string, status: 'Draft' | 'Scheduled' | 'Posted') {
     db.prepare('UPDATE posts SET status = ? WHERE id = ?').run(status, postId);
+}
+
+/** Update a post's image path. */
+export function updatePostImagePath(postId: string, imagePath: string | null) {
+    db.prepare('UPDATE posts SET image_path = ? WHERE id = ?').run(imagePath, postId);
 }
 
 /** Get status for multiple post IDs. Returns map of postId -> status. */
@@ -138,19 +146,65 @@ export function saveBatchContent(accountId: string, date: Date, content: { title
     }
 }
 
+/** Get posts for a specific date with account info. Used to preserve already-generated content in calendar. */
+export function getPostsForDateWithAccounts(date: Date): { accountId: string; slot: number; pest: string; tone: string | null; account: Account }[] {
+    const dateStr = date.toISOString().split('T')[0];
+    const rows = db.prepare(`
+        SELECT p.id, p.account_id, p.pest, p.tone, a.name, a.location, a.account_group, a.platform, a.monthly_post_target, a.brand_color, a.status
+        FROM posts p
+        JOIN accounts a ON p.account_id = a.id
+        WHERE p.date LIKE ?
+    `).all(`${dateStr}%`) as { id: string; account_id: string; pest: string; tone: string | null; name: string; location: string; account_group: string; platform: string; monthly_post_target: number; brand_color: string; status: string }[];
+
+    const now = new Date();
+    const counts = getPostCountsPerAccountForMonth(now.getMonth() + 1, now.getFullYear());
+    const postedCounts = getPostedCountPerAccountForMonth(now.getMonth() + 1, now.getFullYear());
+
+    return rows.map(row => {
+        const parts = row.id.split('-');
+        const slot = parts.length >= 1 ? parseInt(parts[parts.length - 1], 10) : 0;
+        const account: Account = {
+            id: row.account_id,
+            name: row.name,
+            location: row.location,
+            group: row.account_group as AccountGroup,
+            platform: JSON.parse(row.platform),
+            monthlyPostTarget: row.monthly_post_target,
+            currentMonthPosts: counts[row.account_id] ?? 0,
+            postedCount: postedCounts[row.account_id] ?? 0,
+            brandColor: row.brand_color,
+            status: row.status as 'active' | 'inactive'
+        };
+        return { accountId: row.account_id, slot: isNaN(slot) ? 0 : slot, pest: row.pest, tone: row.tone, account };
+    });
+}
+
+/** Get recent posts for an account (pest, title, caption, tone) from the last N months. Used to avoid duplicate content. */
+export function getRecentPostsForAccount(accountId: string, limitMonths = 3): { pest: string; title: string; caption: string; tone: string | null }[] {
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - limitMonths);
+    const cutoffStr = cutoff.toISOString().split('T')[0];
+    const rows = db.prepare(`
+        SELECT pest, title, caption, tone FROM posts
+        WHERE account_id = ? AND date >= ?
+        ORDER BY date DESC
+    `).all(accountId, cutoffStr) as { pest: string; title: string; caption: string; tone: string | null }[];
+    return rows;
+}
+
 export function getSavedBatchContent(
     accountIds: string[],
     date: Date
-): Record<string, { title: string; hook: string; caption: string; canvaInstruction: string; postId?: string; status?: string }> {
+): Record<string, { title: string; hook: string; caption: string; canvaInstruction: string; postId?: string; status?: string; imagePath?: string }> {
     const dateStr = date.toISOString().split('T')[0];
-    const result: Record<string, { title: string; hook: string; caption: string; canvaInstruction: string; postId?: string; status?: string }> = {};
+    const result: Record<string, { title: string; hook: string; caption: string; canvaInstruction: string; postId?: string; status?: string; imagePath?: string }> = {};
 
     for (const accountId of accountIds) {
         const row = db.prepare(`
-            SELECT id, title, caption, canva_instruction, hook, status FROM posts
+            SELECT id, title, caption, canva_instruction, hook, status, image_path FROM posts
             WHERE account_id = ? AND date LIKE ?
             LIMIT 1
-        `).get(accountId, `${dateStr}%`) as { id: string; title: string; caption: string; canva_instruction: string; hook?: string; status?: string } | undefined;
+        `).get(accountId, `${dateStr}%`) as { id: string; title: string; caption: string; canva_instruction: string; hook?: string; status?: string; image_path?: string } | undefined;
 
         if (row && row.title) {
             result[accountId] = {
@@ -159,7 +213,8 @@ export function getSavedBatchContent(
                 caption: row.caption || '',
                 canvaInstruction: row.canva_instruction || '',
                 postId: row.id,
-                status: row.status || 'Draft'
+                status: row.status || 'Draft',
+                imagePath: row.image_path || undefined
             };
         }
     }
@@ -332,6 +387,92 @@ export function getDailyAnalytics(days: number = 30) {
         engagementRate: row.engagement_rate,
         comments: row.comments
     })).reverse(); // Return chronological
+}
+
+export interface ProgressPost {
+    id: string;
+    date: string;
+    imagePath: string;
+    title: string;
+    pest: string;
+}
+
+export interface ProgressAccount {
+    accountId: string;
+    accountName: string;
+    posts: ProgressPost[];
+}
+
+export interface ProgressLocation {
+    locationName: string;
+    accounts: ProgressAccount[];
+}
+
+export interface ProgressDateGroup {
+    dateStr: string;
+    dateLabel: string;
+    locations: ProgressLocation[];
+}
+
+/** Get all posts with images, grouped by date → location → account. For file-manager style progress view. */
+export function getPostsWithImagesByAccount(): ProgressDateGroup[] {
+    const stmt = db.prepare(`
+        SELECT p.id, p.account_id, p.date, p.image_path, p.title, p.pest, a.name as account_name, a.account_group as location_name
+        FROM posts p
+        JOIN accounts a ON p.account_id = a.id
+        WHERE p.image_path IS NOT NULL AND p.image_path != ''
+        ORDER BY p.date DESC, a.account_group, a.name
+    `);
+    const rows = stmt.all() as { id: string; account_id: string; date: string; image_path: string; title: string; pest: string; account_name: string; location_name: string }[];
+
+    const byDate = new Map<string, Map<string, Map<string, { accountName: string; posts: ProgressPost[] }>>>();
+
+    for (const row of rows) {
+        const dateStr = row.date.split("T")[0];
+        const post: ProgressPost = { id: row.id, date: row.date, imagePath: row.image_path, title: row.title, pest: row.pest };
+        const location = row.location_name || "Other";
+
+        if (!byDate.has(dateStr)) {
+            byDate.set(dateStr, new Map());
+        }
+        const byLocation = byDate.get(dateStr)!;
+        if (!byLocation.has(location)) {
+            byLocation.set(location, new Map());
+        }
+        const byAccount = byLocation.get(location)!;
+        if (!byAccount.has(row.account_id)) {
+            byAccount.set(row.account_id, { accountName: row.account_name, posts: [] });
+        }
+        byAccount.get(row.account_id)!.posts.push(post);
+    }
+
+    const result: ProgressDateGroup[] = [];
+    const sortedDates = Array.from(byDate.keys()).sort((a, b) => b.localeCompare(a));
+
+    for (const dateStr of sortedDates) {
+        const byLocation = byDate.get(dateStr)!;
+        const locations: ProgressLocation[] = [];
+        const sortedLocations = Array.from(byLocation.keys()).sort();
+
+        for (const locName of sortedLocations) {
+            const byAccount = byLocation.get(locName)!;
+            const accounts: ProgressAccount[] = Array.from(byAccount.entries()).map(([accountId, data]) => ({
+                accountId,
+                accountName: data.accountName,
+                posts: data.posts
+            }));
+            locations.push({ locationName: locName, accounts });
+        }
+
+        const d = new Date(dateStr + "T12:00:00");
+        result.push({
+            dateStr,
+            dateLabel: d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" }),
+            locations
+        });
+    }
+
+    return result;
 }
 
 /** Clears all data and re-seeds with defaults. */

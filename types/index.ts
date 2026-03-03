@@ -1,4 +1,4 @@
-export type AccountGroup = 'A' | 'B' | 'C' | 'D';
+export type AccountGroup = string;
 
 export interface Account {
     id: string;
@@ -8,7 +8,7 @@ export interface Account {
     logoUrl?: string; // For now a placeholder color or initials
     brandColor: string;
     group: AccountGroup;
-    platform: ('FB' | 'IG' | 'In')[];
+    platform: ('FB' | 'IG' | 'TT')[];
     monthlyPostTarget: number;
     currentMonthPosts: number;
     postedCount?: number; // Number of posts marked as Posted this month

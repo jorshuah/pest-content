@@ -99,17 +99,15 @@ export default function AccountModal({ isOpen, onClose, account, onSave }: Accou
 
                         <div style={{ display: "flex", gap: "1rem" }}>
                             <div className={styles.formGroup} style={{ flex: 1 }}>
-                                <label className={styles.label}>Group</label>
-                                <select
-                                    className={styles.select}
+                                <label className={styles.label}>Service Area</label>
+                                <input
+                                    type="text"
+                                    className={styles.input}
                                     value={formData.group}
-                                    onChange={e => setFormData({ ...formData, group: e.target.value as AccountGroup })}
-                                >
-                                    <option value="A">Group A</option>
-                                    <option value="B">Group B</option>
-                                    <option value="C">Group C</option>
-                                    <option value="D">Group D</option>
-                                </select>
+                                    onChange={e => setFormData({ ...formData, group: e.target.value })}
+                                    placeholder="e.g. Brooklyn, Queens"
+                                    required
+                                />
                             </div>
 
                             <div className={styles.formGroup} style={{ flex: 1 }}>
@@ -157,9 +155,9 @@ export default function AccountModal({ isOpen, onClose, account, onSave }: Accou
                                 <label className={styles.checkboxLabel}>
                                     <input
                                         type="checkbox"
-                                        checked={formData.platform.includes("In")}
-                                        onChange={() => handlePlatformChange("In")}
-                                    /> LinkedIn
+                                        checked={formData.platform.includes("TT")}
+                                        onChange={() => handlePlatformChange("TT")}
+                                    /> TikTok
                                 </label>
                             </div>
                         </div>

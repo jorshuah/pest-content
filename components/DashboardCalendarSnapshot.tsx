@@ -58,14 +58,16 @@ export default function DashboardCalendarSnapshot() {
                 <div className={styles.timeline}>
                     {upcomingBatches.map((batch, i) => (
                         <div key={i} className={styles.timelineItem}>
-                            <div className={styles.timelineNode}></div>
                             <div className={styles.eventContent}>
                                 <div className={styles.eventDetails}>
                                     <span className={styles.eventDate}>
                                         {new Date(batch.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
                                     </span>
                                     <span className={styles.accountName}>
-                                        {batch.profiles.map(p => `${p.account.name.split(' ')[0]} (${p.county})`).join(', ')}
+                                        {batch.profiles.length > 3
+                                            ? batch.profiles.slice(0, 3).map(p => p.account.name.split(' ')[0]).join(', ') + ` +${batch.profiles.length - 3} more`
+                                            : batch.profiles.map(p => p.account.name.split(' ')[0]).join(', ')
+                                        }
                                     </span>
                                     <span className={styles.eventTitle}>{batch.profiles.length} profile{batch.profiles.length !== 1 ? 's' : ''}</span>
                                 </div>

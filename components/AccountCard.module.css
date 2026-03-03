@@ -1,23 +1,21 @@
 .card {
     background-color: var(--card);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: var(--spacing-xl);
-    /* Increased padding */
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    /* Tightened from xl */
     display: flex;
     flex-direction: column;
     gap: var(--spacing-md);
     box-shadow: var(--shadow-sm);
-    /* Default soft shadow */
-    transition: all 0.2s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 .card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-    /* Elevated shadow on hover */
-    border-color: var(--brand);
-    /* Brand color on hover */
+    background-color: var(--muted);
+    border-color: var(--muted-foreground);
 }
 
 .header {
@@ -28,36 +26,43 @@
 
 .brand {
     display: flex;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
+    /* Tightened */
     align-items: center;
 }
 
 .logo {
-    width: 48px;
-    height: 48px;
-    border-radius: var(--radius);
+    width: 40px;
+    /* Reduced from 48px */
+    height: 40px;
+    border-radius: var(--radius-sm);
+    /* Sharper border */
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-weight: 700;
-    font-size: 1.25rem;
+    font-weight: 600;
+    font-size: 1.125rem;
 }
 
 .info {
     display: flex;
     flex-direction: column;
+    gap: 2px;
 }
 
 .name {
     font-weight: 600;
     color: var(--foreground);
     letter-spacing: -0.015em;
-    font-size: 1.125rem;
+    font-size: 1rem;
+    /* Slightly smaller for density */
+    line-height: 1.2;
 }
 
 .location {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
+    /* Reduced */
     color: var(--muted-foreground);
     display: flex;
     align-items: center;
@@ -65,34 +70,41 @@
 }
 
 .groupBadge {
-    font-size: 0.75rem;
-    padding: 2px 8px;
+    font-size: 0.65rem;
+    /* Micro-typography for tags */
+    padding: 2px 6px;
     background-color: var(--secondary);
     color: var(--secondary-foreground);
     border-radius: 9999px;
     font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .metrics {
-    margin-top: var(--spacing-sm);
+    margin-top: var(--spacing-xs);
 }
 
 .progressLabel {
     display: flex;
     justify-content: space-between;
-    font-size: 0.875rem;
-    margin-bottom: var(--spacing-xs);
+    font-size: 0.75rem;
+    /* Tightened */
+    font-weight: 500;
+    margin-bottom: 4px;
+    /* Hardcoded for strict visual layout */
     color: var(--muted-foreground);
 }
 
 .postedCount {
     margin-left: 0.25rem;
     color: var(--status-posted);
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .progressBarTrack {
-    height: 8px;
+    height: 4px;
+    /* Thin, sharp progress bar */
     width: 100%;
     background-color: var(--secondary);
     border-radius: 9999px;
@@ -101,7 +113,6 @@
 
 .progressBarFill {
     height: 100%;
-    /* Keep it dynamic, so background color is set inline, but add a soft transition */
     border-radius: 9999px;
     transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -111,12 +122,13 @@
     justify-content: space-between;
     align-items: center;
     margin-top: auto;
-    padding-top: var(--spacing-md);
+    padding-top: var(--spacing-sm);
+    /* Tightened from md */
     border-top: 1px solid var(--border);
 }
 
 .platformIcons {
     display: flex;
-    gap: var(--spacing-xs);
+    gap: 6px;
     align-items: center;
 }

@@ -1,85 +1,37 @@
 .bentoStatsContainer {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--spacing-lg);
-    margin-bottom: var(--spacing-xl);
+    grid-template-columns: repeat(1, 1fr);
+    gap: var(--spacing-md);
+}
+
+@media (min-width: 640px) {
+    .bentoStatsContainer {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (min-width: 1024px) {
     .bentoStatsContainer {
-        grid-template-columns: 1fr 2fr;
+        grid-template-columns: repeat(4, 1fr);
     }
 }
 
-.primaryCard {
-    background: linear-gradient(135deg, #020817 0%, #1e293b 100%);
-    color: white;
-    border-radius: var(--radius);
-    padding: var(--spacing-2xl);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    box-shadow: var(--shadow-md);
-    transition: all 0.2s ease;
-}
-
-.primaryCard:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-}
-
-.primaryLabel {
-    font-size: 1rem;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.primaryValue {
-    font-size: 4rem;
-    font-weight: 700;
-    letter-spacing: -0.05em;
-    margin: var(--spacing-md) 0;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-}
-
-.primaryTrend {
-    font-size: 0.875rem;
-    color: var(--brand);
-    /* Bright pop against dark card */
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-weight: 600;
-}
-
-.secondaryGrid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--spacing-lg);
-}
-
-.secondaryCard {
+.statCard {
     background-color: var(--card);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.5rem var(--spacing-md);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg) var(--spacing-xl);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-md);
     box-shadow: var(--shadow-sm);
-    transition: all 0.2s ease;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.secondaryCard:last-child {
-    grid-column: span 2;
-    /* Make the 3rd card span full width for symmetry */
-}
-
-.secondaryCard:hover {
-    transform: translateY(-2px);
+.statCard:hover {
     box-shadow: var(--shadow-md);
+    border-color: var(--muted-foreground);
 }
 
 .header {
@@ -95,21 +47,18 @@
 }
 
 .value {
-    font-size: 2.25rem;
+    font-size: 2rem;
     font-weight: 700;
     color: var(--foreground);
-    letter-spacing: -0.05em;
+    letter-spacing: -0.025em;
     font-variant-numeric: tabular-nums;
+    margin: 4px 0;
 }
 
 .trend {
-    font-size: 0.75rem;
-    color: var(--status-posted);
+    font-size: 0.875rem;
     display: flex;
     align-items: center;
-    gap: 0.25rem;
-}
-
-.trendDown {
-    color: var(--destructive);
+    gap: 0.375rem;
+    font-weight: 500;
 }

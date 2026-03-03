@@ -1,14 +1,18 @@
 "use server";
 
-import { getAccounts as repoGetAccounts, createAccount as repoCreateAccount, updateAccount as repoUpdateAccount, saveCalendarEvent, getCalendarEventsForMonth, getContentTemplates, getSettings, updateSetting, getDailyAnalytics, resetDatabase, updatePostStatus, getPostStatuses } from "@/lib/repository";
+import fs from "node:fs/promises";
+import path from "node:path";
+
+import { getAccounts as repoGetAccounts, createAccount as repoCreateAccount, updateAccount as repoUpdateAccount, saveCalendarEvent, getCalendarEventsForMonth, getContentTemplates, getSettings, updateSetting, getDailyAnalytics, resetDatabase, updatePostStatus, getPostStatuses, updatePostImagePath, getPostsWithImagesByAccount, getPostCountsPerAccountForMonth } from "@/lib/repository";
 import { Account } from "@/types";
 import { revalidatePath } from "next/cache";
-import { generateMonthlyCalendar, getTodaysBatch, getMonthBatches } from "@/lib/rotation-engine";
+import { generateMonthlyCalendar, getTodaysBatch, getMonthBatches, getBatchForDate, type TodayBatchProfile, type CalendarBatch } from "@/lib/rotation-engine";
 import { generateContent } from "@/lib/content-generator";
 import { generateAndStoreSeasonalPests } from "@/lib/seasonal-service";
 import { generateContentTemplates } from "@/lib/ai-generators";
-import { createContentTemplate, clearContentTemplates, saveBatchContent, getSavedBatchContent } from "@/lib/repository";
-import { Month } from "@/lib/seasonal-engine";
+import { createContentTemplate, clearContentTemplates, saveBatchContent, getSavedBatchContent, getRecentPostsForAccount, getPostsForDateWithAccounts } from "@/lib/repository";
+import { Month, determineClimate } from "@/lib/seasonal-engine";
+import { getPriorityPests } from "@/lib/seasonal-service";
 
 export async function fetchAccounts() {
     return repoGetAccounts();
@@ -16,7 +20,12 @@ export async function fetchAccounts() {
 
 export async function generateAllMonthlyPlans(month: Month, year: number) {
     const accounts = repoGetAccounts();
-    const events = await generateMonthlyCalendar(accounts, month, year);
+    const monthIndex = getMonthIndex(month);
+    const postsPerAccount = getPostCountsPerAccountForMonth(monthIndex + 1, year);
+    const events = await generateMonthlyCalendar(accounts, month, year, {
+        getRecentPosts: (accountId) => getRecentPostsForAccount(accountId, 3),
+        postsPerAccount
+    });
 
     // Save all generated events
     for (const event of events) {
@@ -70,8 +79,12 @@ export async function fetchCalendarEvents(month: Month, year: number) {
 
     if (filtered.length === 0 && accounts.length > 0) {
         console.log("Generating new events for", month, year);
-        // Generate new events
-        const newEvents = await generateMonthlyCalendar(dbAccounts, month, year);
+        const monthIdx = getMonthIndex(month);
+        const postsPerAccount = getPostCountsPerAccountForMonth(monthIdx + 1, year);
+        const newEvents = await generateMonthlyCalendar(dbAccounts, month, year, {
+            getRecentPosts: (accountId) => getRecentPostsForAccount(accountId, 3),
+            postsPerAccount
+        });
 
         // Save to DB
         for (const event of newEvents) {
@@ -102,27 +115,129 @@ function getMonthIndex(month: Month): number {
     return months.indexOf(month);
 }
 
-export async function fetchCalendarBatches(month: Month, year: number) {
+export async function fetchCalendarBatches(month: Month, year: number): Promise<CalendarBatch[]> {
     const accounts = repoGetAccounts();
-    return getMonthBatches(accounts, month, year);
+    const monthIndex = getMonthIndex(month);
+    // Count from saved posts (days already generated) so rotation only schedules remaining slots
+    const postsPerAccount = getPostCountsPerAccountForMonth(monthIndex + 1, year);
+    // Identify days with saved content so rotation assigns only to empty days (avoids same profile on consecutive days)
+    const daysWithSavedContent: number[] = [];
+    for (let d = 1; d <= 31; d++) {
+        if (new Date(year, monthIndex, d).getDay() === 0) continue; // skip Sundays
+        const date = new Date(year, monthIndex, d);
+        const saved = getPostsForDateWithAccounts(date);
+        if (saved.length > 0) daysWithSavedContent.push(d);
+    }
+    const rotationBatches = getMonthBatches(accounts, month, year, { postsPerAccount, daysWithSavedContent });
+
+    // Merge: preserve already-generated content, use rotation only for days without saved content
+    const merged: CalendarBatch[] = [];
+    for (const rb of rotationBatches) {
+        const date = new Date(rb.date);
+        const savedPosts = getPostsForDateWithAccounts(date);
+
+        // Dedupe by account - one post per profile per day (rotation allows max 1 per day)
+        const seen = new Set<string>();
+        const savedProfiles: TodayBatchProfile[] = savedPosts
+            .filter((p) => {
+                if (seen.has(p.accountId)) return false;
+                seen.add(p.accountId);
+                return true;
+            })
+            .map((p) => ({
+                account: p.account,
+                county: String(p.account.group),
+                suggestedPest: p.pest,
+                pestReason: "Previously scheduled",
+                tone: (p.tone || "Educational") as "Educational" | "Urgent" | "Promotional" | "Myth-busting",
+                slot: p.slot
+            }));
+
+        // Merge: Show all saved profiles, plus rotation profiles for accounts that don't have saved content on this day
+        const savedAccountIds = new Set(savedProfiles.map((p) => p.account.id));
+        const rotationProfilesToInclude = rb.profiles.filter((p) => !savedAccountIds.has(p.account.id));
+
+        const profiles = [...savedProfiles, ...rotationProfilesToInclude];
+        const counties = [...new Set(profiles.map((p) => p.county))];
+
+        const day = rb.date.getDate();
+        const postIds = profiles.map((p) => `${p.account.id}-${day}-${p.slot}`);
+        const statuses = getPostStatuses(postIds);
+
+        const profilesWithStatus = profiles.map((p) => {
+            const postId = `${p.account.id}-${day}-${p.slot}`;
+            return { ...p, isPosted: statuses[postId] === "Posted" };
+        });
+
+        merged.push({ date: rb.date, counties, profiles: profilesWithStatus });
+    }
+
+    return merged;
 }
 
 export async function generateBatchContent(
     profiles: { accountId: string; accountName: string; accountLocation: string; suggestedPest: string; tone: string; slot: number }[],
     date: Date
 ) {
-    const results: { accountId: string; title: string; hook: string; caption: string; canvaInstruction: string; tone: string }[] = [];
+    const monthNames: Month[] = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const month = monthNames[date.getMonth()];
+
+    const results: { accountId: string; postId: string; title: string; hook: string; caption: string; canvaInstruction: string; tone: string }[] = [];
     for (const p of profiles) {
-        const tone = (p.tone || 'Educational') as 'Educational' | 'Urgent' | 'Promotional' | 'Myth-busting';
-        const content = await generateContent(p.suggestedPest, tone, p.accountLocation, p.accountName);
+        // Fetch recent content to avoid duplicates and determine rotation
+        const recent = getRecentPostsForAccount(p.accountId, 6); // Fetch a few more to be safe
+        const usedPests = [...new Set(recent.map(r => r.pest))];
+        const usedTones = [...new Set(recent.map(r => r.tone).filter(Boolean) as string[])];
+        const recentTitles = recent.map(r => r.title).filter(Boolean);
+        const recentCaptions = recent.map(r => r.caption).filter(Boolean);
+
+        const climate = determineClimate(p.accountLocation);
+        const availablePests = getPriorityPests(month, climate).map(x => x.pest);
+
+        let pest = p.suggestedPest;
+        let tone = p.tone as typeof TONES[number]; // Fallback to provided tone
+
+        // 1. Rotate Pest: Find the last used pest that is in our available list. Pick the next one.
+        if (recent.length > 0 && availablePests.length > 0) {
+            const lastUsedPest = recent[0].pest;
+            const lastIndex = availablePests.indexOf(lastUsedPest);
+            if (lastIndex >= 0) {
+                pest = availablePests[(lastIndex + 1) % availablePests.length];
+            } else {
+                pest = availablePests[0]; // Fallback if last used is no longer seasonal
+            }
+        }
+
+        // 2. Rotate Tone: Find the last used tone, pick the next one.
+        const TONES: ('Educational' | 'Urgent' | 'Promotional' | 'Myth-busting')[] = ['Educational', 'Urgent', 'Promotional', 'Myth-busting'];
+        if (recent.length > 0) {
+            const lastUsedTone = recent.find(r => r.tone)?.tone as typeof TONES[number] | undefined;
+            if (lastUsedTone) {
+                const lastIdx = TONES.indexOf(lastUsedTone);
+                if (lastIdx >= 0) {
+                    tone = TONES[(lastIdx + 1) % TONES.length];
+                }
+            }
+        }
+
+        const content = await generateContent(pest, tone, p.accountLocation, p.accountName, {
+            avoidContent: {
+                pests: usedPests,
+                titles: recentTitles,
+                captions: recentCaptions,
+                tones: usedTones
+            }
+        });
         saveBatchContent(p.accountId, date, {
             title: content.title,
             hook: content.hook,
             caption: content.caption,
             canvaInstruction: content.canvaInstruction
-        }, p.suggestedPest, tone, p.slot);
+        }, pest, tone, p.slot);
+        const postId = `${p.accountId}-${date.getDate()}-${p.slot}`;
         results.push({
             accountId: p.accountId,
+            postId,
             title: content.title,
             hook: content.hook,
             caption: content.caption,
@@ -139,8 +254,25 @@ export async function fetchSavedBatchContent(accountIds: string[], date: Date) {
 
 export async function fetchTodaysBatch() {
     const accounts = repoGetAccounts();
-    const profiles = getTodaysBatch(accounts);
     const today = new Date();
+    const savedPosts = getPostsForDateWithAccounts(today);
+    const postsPerAccount = getPostCountsPerAccountForMonth(today.getMonth() + 1, today.getFullYear());
+    const rotationProfiles = getTodaysBatch(accounts, { postsPerAccount });
+
+    const savedProfiles: TodayBatchProfile[] = savedPosts.map((p) => ({
+        account: p.account,
+        county: String(p.account.group),
+        suggestedPest: p.pest,
+        pestReason: "Previously scheduled",
+        tone: (p.tone || "Educational") as "Educational" | "Urgent" | "Promotional" | "Myth-busting",
+        slot: p.slot
+    }));
+    // Merge: Show all saved profiles, plus rotation profiles for accounts that don't have saved content today
+    const savedAccountIds = new Set(savedProfiles.map((p) => p.account.id));
+    const rotationProfilesToInclude = rotationProfiles.filter((p) => !savedAccountIds.has(p.account.id));
+
+    const profiles = [...savedProfiles, ...rotationProfilesToInclude];
+
     const day = today.getDate();
     const postIds = profiles.map((p) => `${p.account.id}-${day}-${p.slot}`);
     const statuses = getPostStatuses(postIds);
@@ -159,6 +291,44 @@ export async function togglePostPosted(postId: string) {
     revalidatePath("/calendar");
     revalidatePath("/accounts");
     return { success: true, status: next };
+}
+
+export async function savePostImage(postId: string, imagePath: string) {
+    updatePostImagePath(postId, imagePath);
+    revalidatePath("/");
+    revalidatePath("/calendar");
+    revalidatePath("/progress");
+    return { success: true };
+}
+
+export async function uploadBatchImage(postId: string, file: File, accountId: string, county: string) {
+    try {
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+
+        // Define path
+        const relativePath = `/uploads/${accountId}/${postId}-${Date.now()}.png`;
+        const absolutePath = path.join(process.cwd(), "public", relativePath);
+
+        // Ensure directory exists
+        await fs.mkdir(path.dirname(absolutePath), { recursive: true });
+
+        // Write file
+        await fs.writeFile(absolutePath, buffer);
+
+        updatePostImagePath(postId, relativePath);
+        revalidatePath("/");
+        revalidatePath("/calendar");
+
+        return { success: true, path: relativePath };
+    } catch (error) {
+        console.error("Error uploading image:", error);
+        return { success: false, error: "Failed to save image" };
+    }
+}
+
+export async function fetchPostsWithImagesByAccount() {
+    return getPostsWithImagesByAccount();
 }
 
 export async function fetchDashboardStats() {

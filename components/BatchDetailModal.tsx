@@ -1,19 +1,10 @@
 "use client";
 
-import { X, MapPin, Bug, Sparkles, ChevronDown, ChevronUp, CheckCircle2, Circle } from "lucide-react";
-import { CalendarBatch } from "@/lib/rotation-engine";
-import { useState, useEffect } from "react";
-import { generateBatchContent, fetchSavedBatchContent, togglePostPosted } from "@/app/actions";
-
-interface ProfileContent {
-    accountId: string;
-    title: string;
-    hook: string;
-    caption: string;
-    canvaInstruction: string;
-    postId?: string;
-    status?: string;
-}
+import React, { useState, useEffect, useRef } from 'react';
+import { X, MapPin, Bug, Sparkles, ImagePlus, Loader2, CheckCircle2, Circle, Copy, Check } from 'lucide-react';
+import styles from './BatchDetailModal.module.css';
+import { CalendarBatch, TodayBatchProfile } from '@/lib/rotation-engine';
+import { generateBatchContent, fetchSavedBatchContent, togglePostPosted, uploadBatchImage } from '@/app/actions';
 
 interface BatchDetailModalProps {
     isOpen: boolean;
@@ -21,24 +12,41 @@ interface BatchDetailModalProps {
     batch: CalendarBatch | null;
 }
 
+interface ProfileContent {
+    postId: string;
+    title: string;
+    hook: string;
+    caption: string;
+    canvaInstruction: string;
+    status: 'Draft' | 'Posted';
+    imagePath?: string;
+    imageVersion?: number;
+}
+
 export default function BatchDetailModal({ isOpen, onClose, batch }: BatchDetailModalProps) {
     const [contentByProfile, setContentByProfile] = useState<Record<string, ProfileContent>>({});
     const [isGenerating, setIsGenerating] = useState(false);
-    const [expandedId, setExpandedId] = useState<string | null>(null);
+    const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
     const [togglingId, setTogglingId] = useState<string | null>(null);
+    const [uploadingId, setUploadingId] = useState<string | null>(null);
+    const [copiedContentId, setCopiedContentId] = useState<string | null>(null);
+    const [copiedRecipeId, setCopiedRecipeId] = useState<string | null>(null);
+    const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
     useEffect(() => {
         if (!isOpen || !batch) {
             setContentByProfile({});
+            setSelectedAccountId(null);
             return;
         }
-        setContentByProfile({});
+
         const accountIds = batch.profiles.map(p => p.account.id);
-        const date = new Date(batch.date);
-        fetchSavedBatchContent(accountIds, date).then(saved => {
+        const date = batch.date;
+
+        fetchSavedBatchContent(accountIds, date).then((saved: any) => {
             if (Object.keys(saved).length > 0) {
                 setContentByProfile(saved as Record<string, ProfileContent>);
-                setExpandedId(batch.profiles[0]?.account.id ?? null);
+                setSelectedAccountId(batch.profiles[0]?.account.id ?? null);
             }
         });
     }, [isOpen, batch]);
@@ -46,13 +54,23 @@ export default function BatchDetailModal({ isOpen, onClose, batch }: BatchDetail
     if (!isOpen || !batch) return null;
 
     const handleBackdropClick = (e: React.MouseEvent) => {
-        if ((e.target as HTMLElement).dataset.backdrop) onClose();
+        if ((e.target as HTMLElement).hasAttribute('data-backdrop')) {
+            onClose();
+        }
+    };
+
+    const handleCopy = (text: string, type: 'content' | 'recipe') => {
+        navigator.clipboard.writeText(text);
+        const setter = type === 'content' ? setCopiedContentId : setCopiedRecipeId;
+        setter('copied');
+        setTimeout(() => setter(null), 2000);
     };
 
     const handleGenerateContent = async () => {
+        if (!batch) return;
         setIsGenerating(true);
         try {
-            const profiles = batch.profiles.map(p => ({
+            const profilesForGen = batch.profiles.map(p => ({
                 accountId: p.account.id,
                 accountName: p.account.name,
                 accountLocation: p.account.location,
@@ -60,14 +78,25 @@ export default function BatchDetailModal({ isOpen, onClose, batch }: BatchDetail
                 tone: p.tone,
                 slot: p.slot
             }));
-            const date = new Date(batch.date);
-            const results = await generateBatchContent(profiles, date);
-            const byId: Record<string, ProfileContent> = {};
-            for (const r of results) {
-                byId[r.accountId] = r;
+
+            const results = await generateBatchContent(profilesForGen, batch.date);
+
+            const newContent: Record<string, ProfileContent> = {};
+            results.forEach(r => {
+                newContent[r.accountId] = {
+                    postId: r.postId,
+                    title: r.title,
+                    hook: r.hook,
+                    caption: r.caption,
+                    canvaInstruction: r.canvaInstruction,
+                    status: 'Draft'
+                };
+            });
+
+            setContentByProfile(newContent);
+            if (batch.profiles.length > 0) {
+                setSelectedAccountId(batch.profiles[0].account.id);
             }
-            setContentByProfile(byId);
-            setExpandedId(batch.profiles[0]?.account.id ?? null);
         } catch (err) {
             console.error(err);
         } finally {
@@ -76,17 +105,15 @@ export default function BatchDetailModal({ isOpen, onClose, batch }: BatchDetail
     };
 
     const handleTogglePosted = async (accountId: string) => {
-        const content = contentByProfile[accountId];
-        if (!content?.postId) return;
+        const currentContent = contentByProfile[accountId];
+        if (!currentContent) return;
+
         setTogglingId(accountId);
         try {
-            await togglePostPosted(content.postId);
-            setContentByProfile((prev) => ({
+            const result = await togglePostPosted(currentContent.postId);
+            setContentByProfile(prev => ({
                 ...prev,
-                [accountId]: {
-                    ...prev[accountId],
-                    status: prev[accountId].status === "Posted" ? "Draft" : "Posted"
-                }
+                [accountId]: { ...prev[accountId], status: result.status as 'Draft' | 'Posted' }
             }));
         } catch (err) {
             console.error(err);
@@ -95,198 +122,230 @@ export default function BatchDetailModal({ isOpen, onClose, batch }: BatchDetail
         }
     };
 
+    const handleImageUpload = async (accountId: string, file: File, county: string) => {
+        const content = contentByProfile[accountId];
+        if (!content) return;
+
+        setUploadingId(accountId);
+        try {
+            const result = await uploadBatchImage(content.postId, file, accountId, county);
+            if (result.success && result.path) {
+                setContentByProfile(prev => ({
+                    ...prev,
+                    [accountId]: {
+                        ...prev[accountId],
+                        imagePath: result.path,
+                        imageVersion: (prev[accountId].imageVersion || 0) + 1
+                    }
+                }));
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setUploadingId(null);
+        }
+    };
+
+    const getImageSrc = (path: string) => {
+        if (path.startsWith('http')) return path;
+        return path;
+    };
+
+    const selectedProfile = batch.profiles.find(p => p.account.id === selectedAccountId);
+    const selectedContent = selectedAccountId ? contentByProfile[selectedAccountId] : null;
+
     return (
-        <div
-            data-backdrop
-            style={{
-                position: 'fixed',
-                inset: 0,
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 50,
-                padding: '1rem',
-                backdropFilter: 'blur(4px)'
-            }}
-            onClick={handleBackdropClick}
-        >
-            <div
-                style={{
-                    backgroundColor: 'var(--card)',
-                    borderRadius: 'var(--radius)',
-                    border: '1px solid var(--border)',
-                    width: '100%',
-                    maxWidth: '640px',
-                    maxHeight: '90vh',
-                    overflowY: 'auto',
-                    boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
-                    position: 'relative'
-                }}
-                onClick={e => e.stopPropagation()}
-            >
-                <button
-                    onClick={onClose}
-                    style={{
-                        position: 'absolute',
-                        top: '1rem',
-                        right: '1rem',
-                        padding: '0.5rem',
-                        borderRadius: '50%',
-                        border: 'none',
-                        backgroundColor: 'var(--secondary)',
-                        color: 'var(--foreground)',
-                        cursor: 'pointer',
-                        zIndex: 10
-                    }}
-                >
-                    <X size={20} />
-                </button>
+        <div className={styles.overlay} onClick={handleBackdropClick} data-backdrop>
+            <div className={styles.modal} onClick={e => e.stopPropagation()}>
+                <div className={styles.splitLayout}>
+                    {/* Sidebar Navigation */}
+                    <aside className={styles.sidebar}>
+                        <div className={styles.sidebarHeader}>
+                            <div className={styles.sidebarTitle}>Batch Profiles</div>
+                            <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: 'var(--muted-foreground)' }}>{batch.profiles.length} Total</div>
+                        </div>
+                        <div className={styles.sidebarContent}>
+                            {batch.profiles.map(({ account }: TodayBatchProfile) => {
+                                const content = contentByProfile[account.id];
+                                const isSelected = selectedAccountId === account.id;
+                                const isCompleted = content?.status === 'Posted' || content?.imagePath;
 
-                <div style={{ padding: '1.5rem' }}>
-                    <div style={{ marginBottom: '1rem', color: 'var(--muted-foreground)', fontSize: '0.875rem' }}>
-                        {new Date(batch.date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
-                    </div>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem' }}>
-                        {batch.profiles.length} profile{batch.profiles.length !== 1 ? 's' : ''} in this batch
-                    </h3>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)', marginBottom: '1rem' }}>
-                        Generate content ideas and Canva recipes for each profile.
-                    </p>
+                                return (
+                                    <button
+                                        key={account.id}
+                                        onClick={() => setSelectedAccountId(account.id)}
+                                        className={`${styles.accountNavItem} ${isSelected ? styles.selected : ''}`}
+                                    >
+                                        <div className={styles.navAvatar} style={{ backgroundColor: account.brandColor || 'var(--brand)' }}>
+                                            {account.name.charAt(0)}
+                                        </div>
+                                        <div className={styles.navAccountName} style={{ fontSize: '0.75rem', fontWeight: 500 }}>{account.name}</div>
+                                        <div className={`${styles.statusIndicator} ${isCompleted ? styles.completed : ''}`}>
+                                            {isCompleted ? <CheckCircle2 size={14} fill="currentColor" /> : <Circle size={14} />}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </aside>
 
-                    {Object.keys(contentByProfile).length === 0 && (
-                        <button
-                            onClick={handleGenerateContent}
-                            disabled={isGenerating}
-                            style={{
-                                width: '100%',
-                                padding: '0.75rem 1rem',
-                                borderRadius: 'var(--radius)',
-                                border: 'none',
-                                backgroundColor: 'var(--brand)',
-                                color: 'white',
-                                fontWeight: 600,
-                                cursor: isGenerating ? 'wait' : 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '0.5rem'
-                            }}
-                        >
-                            <Sparkles size={18} />
-                            {isGenerating ? 'Generating...' : 'Generate content for this batch'}
-                        </button>
-                    )}
+                    {/* Main Workspace */}
+                    <main className={styles.mainWorkspace}>
+                        <div className={styles.header}>
+                            <div>
+                                <div className={styles.dateKicker}>
+                                    {new Date(batch.date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+                                </div>
+                                <h3 className={styles.title}>
+                                    {selectedProfile ? selectedProfile.account.name : 'Select a profile'}
+                                </h3>
+                            </div>
+                            <button onClick={onClose} className={styles.closeButton}>
+                                <X size={20} />
+                            </button>
+                        </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
-                        {batch.profiles.map(({ account, county, suggestedPest, tone }) => {
-                            const content = contentByProfile[account.id];
-                            const isExpanded = expandedId === account.id;
-
-                            return (
-                                <div
-                                    key={account.id}
-                                    style={{
-                                        border: '1px solid var(--border)',
-                                        borderRadius: 'var(--radius)',
-                                        overflow: 'hidden',
-                                        backgroundColor: 'var(--muted)'
-                                    }}
-                                >
-                                    <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                        <div className={styles.content}>
+                            {!selectedContent && !isGenerating && (
+                                <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
+                                    <div style={{ background: 'var(--muted)', borderRadius: 'var(--radius-lg)', padding: '2rem', border: '1px dashed var(--border)', maxWidth: '400px', margin: '0 auto' }}>
+                                        < Sparkles size={32} style={{ color: 'var(--brand)', marginBottom: '1rem', opacity: 0.5 }} />
+                                        <h4 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>No content generated</h4>
+                                        <p style={{ color: 'var(--muted-foreground)', marginBottom: '1.5rem', fontSize: '0.8125rem' }}>Start the workflow by generating content for this batch.</p>
                                         <button
-                                            onClick={() => setExpandedId(isExpanded ? null : account.id)}
-                                            style={{
-                                                flex: 1,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '1rem',
-                                                padding: '0.75rem 1rem',
-                                                border: 'none',
-                                                background: 'none',
-                                                cursor: 'pointer',
-                                                color: 'inherit',
-                                                textAlign: 'left'
-                                            }}
+                                            onClick={handleGenerateContent}
+                                            disabled={isGenerating}
+                                            className={styles.generateButton}
+                                            style={{ maxWidth: '300px', margin: '0 auto' }}
                                         >
-                                            <div
-                                                style={{
-                                                    width: 36,
-                                                    height: 36,
-                                                    borderRadius: '50%',
-                                                    backgroundColor: account.brandColor || 'var(--brand)',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    color: 'white',
-                                                    fontWeight: 600,
-                                                    fontSize: '0.875rem'
-                                                }}
-                                            >
-                                                {account.name.charAt(0)}
-                                            </div>
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ fontWeight: 600 }}>{account.name}</div>
-                                                <div style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)' }}>
-                                                    <MapPin size={12} style={{ display: 'inline', verticalAlign: -2 }} /> {county} · <Bug size={12} style={{ display: 'inline', verticalAlign: -2 }} /> {suggestedPest} · <span style={{ fontWeight: 500 }}>{tone}</span>
-                                                </div>
-                                            </div>
-                                            {content && (isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />)}
+                                            <Sparkles size={16} />
+                                            {isGenerating ? 'Generating...' : 'Generate Batch Content'}
                                         </button>
-                                        {content?.postId && (
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleTogglePosted(account.id); }}
-                                                disabled={togglingId === account.id}
-                                                title={content.status === 'Posted' ? 'Mark as not posted' : 'Mark as posted'}
-                                                style={{
-                                                    padding: '0.5rem',
-                                                    border: 'none',
-                                                    background: 'none',
-                                                    cursor: togglingId === account.id ? 'wait' : 'pointer',
-                                                    color: content.status === 'Posted' ? 'var(--status-posted)' : 'var(--muted-foreground)',
-                                                    flexShrink: 0
-                                                }}
-                                            >
-                                                {content.status === 'Posted' ? (
-                                                    <CheckCircle2 size={24} fill="var(--status-posted)" />
-                                                ) : (
-                                                    <Circle size={24} />
-                                                )}
-                                            </button>
-                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {isGenerating && (
+                                <div style={{ padding: '6rem 2rem', textAlign: 'center' }}>
+                                    <Loader2 size={32} className="animate-spin" style={{ color: 'var(--brand)', margin: '0 auto 1rem' }} />
+                                    <p style={{ fontWeight: 500, fontSize: '0.875rem' }}>Generating professional content...</p>
+                                </div>
+                            )}
+
+                            {selectedProfile && selectedContent && (
+                                <div className={styles.workspaceLayout}>
+                                    {/* Primary Content Column */}
+                                    <div className={styles.primaryColumn}>
+                                        <div className={styles.detailSection}>
+                                            <div className={styles.sectionHeader}>
+                                                <div className={styles.sectionLabel}>AI Content Strategy</div>
+                                                <button
+                                                    className={`${styles.copyButton} ${copiedContentId ? styles.copied : ''}`}
+                                                    onClick={() => handleCopy(`${selectedContent.title}\n\n${selectedContent.hook}\n\n${selectedContent.caption}`, 'content')}
+                                                >
+                                                    {copiedContentId ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy Strategy</>}
+                                                </button>
+                                            </div>
+                                            <div style={{ padding: '0.25rem 0' }}>
+                                                <div className={styles.contentTitle}>{selectedContent.title}</div>
+                                                <div className={styles.contentHook}>{selectedContent.hook}</div>
+                                                <div className={styles.contentBody}>{selectedContent.caption}</div>
+                                            </div>
+                                        </div>
+
+                                        <div className={styles.detailSection}>
+                                            <div className={styles.sectionHeader}>
+                                                <div className={styles.sectionLabel}>Canva Design Recipe</div>
+                                                <button
+                                                    className={`${styles.copyButton} ${copiedRecipeId ? styles.copied : ''}`}
+                                                    onClick={() => handleCopy(selectedContent.canvaInstruction, 'recipe')}
+                                                >
+                                                    {copiedRecipeId ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy Recipe</>}
+                                                </button>
+                                            </div>
+                                            <div className={styles.recipeBox}>
+                                                {selectedContent.canvaInstruction}
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    {content && isExpanded && (
-                                        <div style={{ padding: '1rem', borderTop: '1px solid var(--border)', backgroundColor: 'var(--card)' }}>
-                                            <div style={{ marginBottom: '1rem' }}>
-                                                <div style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', marginBottom: 4 }}>Content idea</div>
-                                                <div style={{ fontWeight: 600, marginBottom: 4 }}>{content.title}</div>
-                                                <div style={{ fontSize: '0.875rem', fontStyle: 'italic', marginBottom: 4 }}>{content.hook}</div>
-                                                <div style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>{content.caption}</div>
-                                            </div>
-                                            <div>
-                                                <div style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', marginBottom: 4 }}>Canva design recipe</div>
-                                                <div
-                                                    style={{
-                                                        padding: '0.75rem',
-                                                        backgroundColor: 'white',
-                                                        borderRadius: '0.5rem',
-                                                        border: '1px solid var(--border)',
-                                                        fontSize: '0.875rem',
-                                                        color: '#0f172a',
-                                                        whiteSpace: 'pre-wrap',
-                                                        lineHeight: 1.5
-                                                    }}
-                                                >
-                                                    {content.canvaInstruction}
+                                    {/* Workspace Sidebar / Control Panel */}
+                                    <aside className={styles.controlPanel}>
+                                        <div className={styles.detailSection}>
+                                            <div className={styles.sectionLabel}>Metadata</div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                                <div className={`${styles.toneBadge} ${styles[selectedProfile.tone.toLowerCase()] || ''}`} style={{ alignSelf: 'flex-start', fontSize: '0.625rem', padding: '0.2rem 0.5rem' }}>
+                                                    {selectedProfile.tone}
+                                                </div>
+                                                <div className={styles.metaItem} style={{ fontSize: '0.8125rem' }}>
+                                                    <MapPin size={12} className={styles.metaIcon} />
+                                                    <span style={{ fontWeight: 600 }}>{selectedProfile.county}</span>
+                                                </div>
+                                                <div className={styles.metaItem} style={{ fontSize: '0.8125rem' }}>
+                                                    <Bug size={12} className={styles.metaIcon} />
+                                                    <span className={styles.pestText}>{selectedProfile.suggestedPest}</span>
                                                 </div>
                                             </div>
                                         </div>
-                                    )}
+
+                                        <div className={styles.detailSection}>
+                                            <div className={styles.sectionLabel}>Status</div>
+                                            <button
+                                                onClick={() => handleTogglePosted(selectedProfile.account.id)}
+                                                disabled={togglingId === selectedProfile.account.id}
+                                                className={styles.statusButton}
+                                                style={{
+                                                    border: '1px solid var(--border)',
+                                                    borderRadius: 'var(--radius-md)',
+                                                    padding: '0.5rem',
+                                                    width: '100%',
+                                                    backgroundColor: selectedContent.status === 'Posted' ? 'var(--status-posted-bg)' : 'var(--background)',
+                                                    color: selectedContent.status === 'Posted' ? 'var(--status-posted)' : 'var(--foreground)',
+                                                    fontWeight: 600,
+                                                    fontSize: '0.75rem'
+                                                }}
+                                            >
+                                                {selectedContent.status === 'Posted' ? (
+                                                    <><CheckCircle2 size={14} fill="currentColor" style={{ marginRight: '6px' }} /> Posted</>
+                                                ) : (
+                                                    <><Circle size={14} style={{ marginRight: '6px' }} /> Mark as Posted</>
+                                                )}
+                                            </button>
+                                        </div>
+
+                                        <div className={styles.detailSection}>
+                                            <div className={styles.sectionLabel}>Job Output</div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                                {selectedContent.imagePath && (
+                                                    <img
+                                                        src={getImageSrc(selectedContent.imagePath) + (selectedContent.imageVersion ? `?v=${selectedContent.imageVersion}` : '')}
+                                                        alt="Job output"
+                                                        style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}
+                                                    />
+                                                )}
+                                                <label className={`${styles.imageUploadBtn} ${uploadingId === selectedProfile.account.id ? styles.disabled : ''}`} style={{ justifyContent: 'center', padding: '0.75rem', fontSize: '0.75rem' }}>
+                                                    <input
+                                                        ref={(el) => { fileInputRefs.current[selectedProfile.account.id] = el; }}
+                                                        type="file"
+                                                        accept="image/*"
+                                                        style={{ display: 'none' }}
+                                                        onChange={(e) => {
+                                                            const f = e.target.files?.[0];
+                                                            if (f) handleImageUpload(selectedProfile.account.id, f, selectedProfile.county);
+                                                            e.target.value = '';
+                                                        }}
+                                                        disabled={uploadingId === selectedProfile.account.id}
+                                                    />
+                                                    {uploadingId === selectedProfile.account.id ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />}
+                                                    {selectedContent.imagePath ? 'Replace Image' : 'Upload Image'}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </aside>
                                 </div>
-                            );
-                        })}
-                    </div>
+                            )}
+                        </div>
+                    </main>
                 </div>
             </div>
         </div>

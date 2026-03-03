@@ -1,8 +1,8 @@
 .container {
     padding: var(--spacing-xl);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
     background-color: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
 }
 
@@ -10,54 +10,56 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--border);
 }
 
 .title {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
     font-weight: 600;
     color: var(--foreground);
     letter-spacing: -0.015em;
+    margin: 0;
 }
 
 .badge {
     font-size: 0.75rem;
-    padding: 4px 10px;
+    padding: 2px 8px;
     border-radius: 999px;
-    background-color: var(--brand);
-    color: white;
-    font-weight: 600;
+    background-color: var(--secondary);
+    color: var(--secondary-foreground);
+    font-weight: 500;
 }
 
 .subtitle {
     font-size: 0.875rem;
     color: var(--muted-foreground);
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
 }
 
 .profileList {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
 }
 
 .profileCard {
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
-    padding: var(--spacing-md);
-    background-color: var(--background);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    padding: var(--spacing-md) var(--spacing-sm);
+    border-bottom: 1px solid var(--border);
     text-decoration: none;
     color: inherit;
-    transition: all 0.2s ease;
+    transition: background-color 0.15s ease;
+}
+
+.profileCard:last-child {
+    border-bottom: none;
 }
 
 .profileCard:hover {
-    border-color: var(--brand);
-    box-shadow: var(--shadow-sm);
-    transform: translateX(2px);
+    background-color: var(--muted);
 }
 
 .avatar {
@@ -77,12 +79,19 @@
     flex: 1;
     min-width: 0;
     display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.accountInfo {
+    display: flex;
     flex-direction: column;
     gap: 2px;
 }
 
 .accountName {
-    font-weight: 600;
+    font-weight: 500;
     font-size: 0.9375rem;
     color: var(--foreground);
 }
@@ -98,43 +107,48 @@
 .pestRow {
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-top: 4px;
+    gap: 12px;
 }
 
-.pestLabel {
+.pestTag {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     font-size: 0.8125rem;
     font-weight: 500;
-    color: var(--foreground);
+    color: var(--secondary-foreground);
+    background-color: var(--secondary);
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+
+.pestIcon {
+    color: inherit;
 }
 
 .toneBadge {
-    font-size: 0.7rem;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background-color: var(--muted);
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background-color: transparent;
+    border: 1px solid var(--border);
     color: var(--muted-foreground);
     font-weight: 500;
-}
-
-.pestReason {
-    font-size: 0.75rem;
-    color: var(--muted-foreground);
 }
 
 .postedBadge {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--status-posted);
-    margin-left: 4px;
 }
 
 .chevron {
     color: var(--muted-foreground);
     flex-shrink: 0;
+    margin-left: auto;
 }
 
 .viewCalendar {

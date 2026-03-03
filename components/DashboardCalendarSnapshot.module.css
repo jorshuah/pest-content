@@ -1,12 +1,9 @@
 .container {
-    margin-top: var(--spacing-xl);
     padding: var(--spacing-xl);
-    /* Increased padding for breathing room */
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
     background-color: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
-    /* Added subtle shadow */
 }
 
 .header {
@@ -14,129 +11,113 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--border);
 }
 
 .title {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
     font-weight: 600;
     display: flex;
     align-items: center;
     gap: 0.5rem;
     color: var(--foreground);
     letter-spacing: -0.015em;
+    margin: 0;
 }
 
 .viewAllLink {
     font-size: 0.875rem;
     color: var(--brand);
-    /* Updated to brand */
     font-weight: 500;
     display: flex;
     align-items: center;
-    transition: opacity 0.2s;
+    transition: opacity 0.15s ease;
 }
 
 .viewAllLink:hover {
-    opacity: 0.8;
-    text-decoration: underline;
+    opacity: 0.7;
 }
 
 .timeline {
-    position: relative;
-    padding-left: 2rem;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-lg);
-    margin-top: var(--spacing-md);
-}
-
-.timeline::before {
-    content: '';
-    position: absolute;
-    left: 7px;
-    /* Center of a 16px dot */
-    top: 8px;
-    /* Stop at the first dot */
-    bottom: 0px;
-    width: 2px;
-    background-color: var(--border);
 }
 
 .timelineItem {
-    position: relative;
-    background-color: var(--background);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: var(--spacing-md);
-    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-sm);
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.15s ease;
 }
 
-.timelineNode {
-    position: absolute;
-    left: -2rem;
-    /* Move back to sit on the line */
-    top: 1rem;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background-color: var(--card);
-    border: 3px solid var(--brand);
-    z-index: 2;
+.timelineItem:last-child {
+    border-bottom: none;
 }
 
 .timelineItem:hover {
-    transform: translateX(4px);
-    box-shadow: var(--shadow-sm);
-    border-color: var(--brand);
+    background-color: var(--muted);
 }
 
 .eventContent {
     flex: 1;
+    min-width: 0;
+    /* Important for text truncation in flex children */
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-}
-
-.previewContainer {
-    width: 80px;
-    height: 80px;
-    flex-shrink: 0;
-    border-radius: var(--radius);
-    overflow: hidden;
-    border: 1px solid var(--border);
-    background-color: var(--muted);
+    gap: var(--spacing-sm);
 }
 
 .eventDetails {
     display: flex;
     flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
 }
 
 .eventDate {
     font-size: 0.75rem;
-    color: var(--muted-foreground);
-    display: block;
-    margin-bottom: 4px;
+    font-weight: 500;
+    color: var(--primary);
+    background-color: var(--muted);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    display: inline-block;
+    align-self: flex-start;
 }
 
 .accountName {
-    font-weight: 600;
-    display: block;
+    font-weight: 500;
+    font-size: 0.875rem;
     color: var(--foreground);
+    line-height: 1.5;
+    /* Truncate long lists to 2 lines */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .eventTitle {
-    font-size: 0.875rem;
-    color: var(--foreground);
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    margin-top: 2px;
 }
 
 .pestBadge {
+    flex-shrink: 0;
     font-size: 0.75rem;
-    padding: 4px 8px;
+    padding: 2px 8px;
     border-radius: 999px;
-    background-color: var(--background);
-    border: 1px solid var(--border);
-    color: var(--muted-foreground);
+    background-color: var(--secondary);
+    color: var(--secondary-foreground);
+    font-weight: 500;
 }
 
 .emptyState {

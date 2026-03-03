@@ -1,7 +1,7 @@
 .calendarContainer {
     background-color: var(--card);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    /* No radius to give a true dashboard table look */
     overflow-x: auto;
     overflow-y: visible;
     min-width: 0;
@@ -11,122 +11,137 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
     border-bottom: 1px solid var(--border);
+    background-color: var(--background);
+    /* Contrast against the grid */
 }
 
 .monthTitle {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
     font-weight: 600;
 }
 
 .navigation {
     display: flex;
-    gap: var(--spacing-sm);
+    gap: 4px;
+    /* Tighter button gap */
 }
 
 .navButton {
-    background-color: var(--muted);
+    background-color: var(--card);
     color: var(--foreground);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.2s, border-color 0.2s;
+    transition: all 0.15s ease;
 }
 
 .navButton:hover {
-    background-color: var(--accent);
-    border-color: var(--ring);
+    background-color: var(--muted);
+    border-color: var(--muted-foreground);
 }
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(6, minmax(100px, 1fr));
+    grid-template-columns: repeat(6, minmax(120px, 1fr));
+    /* Slightly wider min columns to fit text */
     min-width: 600px;
 }
 
 .dayHeader {
-    padding: var(--spacing-sm);
-    text-align: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: left;
     font-weight: 600;
-    font-size: 0.875rem;
+    font-size: 0.6875rem;
+    /* Tiny, precise cap height */
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
     border-bottom: 1px solid var(--border);
     border-right: 1px solid var(--border);
-    background-color: var(--secondary);
+    background-color: var(--background);
+    /* Make headers slightly visually detached to frame the content */
 }
 
 .dayCell {
-    min-height: 120px;
+    min-height: 140px;
+    height: 140px;
+    /* Uniform height for Google-style look */
     border-bottom: 1px solid var(--border);
     border-right: 1px solid var(--border);
-    padding: var(--spacing-xs);
+    padding: 6px;
     position: relative;
+    background-color: var(--card);
 }
 
 .dayNumber {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 500;
     color: var(--muted-foreground);
-    margin-bottom: var(--spacing-xs);
-    display: block;
+    margin-bottom: 4px;
+    display: inline-block;
+    width: 100%;
 }
 
-.batch {
-    margin-top: 4px;
-    padding: 6px 8px;
-    border-radius: 6px;
-    background-color: var(--status-draft);
-    color: #0f172a;
-    cursor: pointer;
-    transition: opacity 0.2s;
-}
-
-.batch:hover {
-    opacity: 0.9;
-}
-
-.batchProfiles {
+.chipContainer {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    font-size: 0.65rem;
-    line-height: 1.2;
 }
 
-.batchProfile {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.event {
-    background-color: var(--primary);
-    color: var(--primary-foreground);
-    padding: 2px 4px;
+.chip {
+    display: flex;
+    align-items: center;
+    padding: 2px 6px;
+    background-color: #f1f5f9;
+    /* Fallback slate */
+    border: 1px solid #e2e8f0;
     border-radius: 4px;
-    font-size: 0.75rem;
-    margin-bottom: 2px;
+    font-size: 0.7rem;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.1s ease;
     white-space: nowrap;
     overflow: hidden;
+}
+
+.chip:hover {
+    filter: brightness(0.95);
+    z-index: 10;
+}
+
+.chipPosted {
+    background-color: #f0fdf4 !important;
+    /* Soft success green */
+    border: 1px solid #bbf7d0 !important;
+    border-left: 3px solid #22c55e !important;
+    color: #166534 !important;
+}
+
+.chipPosted:hover {
+    background-color: #dcfce7 !important;
+}
+
+.chipText {
+    overflow: hidden;
     text-overflow: ellipsis;
+    font-weight: 600;
+}
+
+.moreLink {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--muted-foreground);
+    padding: 2px 4px;
     cursor: pointer;
+    margin-top: 2px;
 }
 
-.eventDraft {
-    background-color: var(--status-draft);
-    color: black;
-}
-
-.eventScheduled {
-    background-color: var(--status-scheduled);
-    color: white;
-}
-
-.eventPosted {
-    background-color: var(--status-posted);
-    color: white;
+.moreLink:hover {
+    color: var(--foreground);
 }

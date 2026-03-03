@@ -10,7 +10,8 @@ import {
     FileText,
     BarChart3,
     Settings,
-    Bug
+    Bug,
+    ImageIcon
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -20,6 +21,7 @@ export default function Sidebar() {
         { name: "Dashboard", href: "/", icon: LayoutDashboard },
         { name: "Accounts", href: "/accounts", icon: Users },
         { name: "Calendar", href: "/calendar", icon: Calendar },
+        { name: "Progress", href: "/progress", icon: ImageIcon },
         { name: "Content Bank", href: "/content", icon: FileText },
         { name: "Analytics", href: "/analytics", icon: BarChart3 },
         { name: "Settings", href: "/settings", icon: Settings },

@@ -43,39 +43,37 @@ export default function SeasonalFocus({ location = "New York, NY" }: SeasonalFoc
     return (
         <div className={styles.container}>
             <div className={styles.header}>
-                <div>
+                <div className={styles.titleBlock}>
                     <h2 className={styles.title}>Seasonal Priority: {currentMonth}</h2>
-                    <span className={styles.subtitle}>Region: {location} ({climate})</span>
+                    <span className={styles.subtitle}>Region: {location}</span>
                 </div>
-                <div style={{ display: "flex", gap: "8px", alignItems: "center", color: "var(--muted-foreground)" }}>
-                    {getClimateIcon(climate)}
-                    <span style={{ fontSize: "0.875rem" }}>{climate} Climate</span>
+                <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap", width: "100%" }}>
+                    <div className={styles.climateInfo}>
+                        {getClimateIcon(climate)}
+                        <span>{climate} Climate</span>
+                    </div>
                     <SeasonalGenerateButton month={currentMonth} climate={climate} />
                 </div>
             </div>
 
             <div className={styles.grid}>
-                {displayPests.map((pest, index) => (
-                    <div key={index} className={styles.pestCard}>
-                        <div
-                            style={{
-                                backgroundColor: "var(--background)",
-                                padding: "8px",
-                                borderRadius: "50%",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                border: "1px solid var(--border)"
-                            }}
-                        >
-                            <Bug size={20} color="var(--primary)" />
+                {displayPests.map((pest, index) => {
+                    const priorityClass =
+                        pest.priority === "High" ? styles.priorityHigh :
+                            pest.priority === "Medium" ? styles.priorityMedium :
+                                styles.priorityLow;
+
+                    return (
+                        <div key={index} className={styles.pestCard}>
+                            <div className={styles.pestInfo}>
+                                <span className={styles.pestName}>{pest.pest}</span>
+                                <span className={`${styles.pestPriority} ${priorityClass}`}>
+                                    {pest.priority} Priority
+                                </span>
+                            </div>
                         </div>
-                        <div className={styles.pestInfo}>
-                            <span className={styles.pestName}>{pest.pest}</span>
-                            <span className={styles.pestPriority}>{pest.priority} Priority</span>
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

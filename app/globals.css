@@ -1,53 +1,65 @@
 :root {
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  
-  /* Color Palette - Light Mode Default */
-  --background: #f8fafc; /* Softer light blue-gray background */
-  --foreground: #0f172a; /* Slate 900 for text */
-  
+
+  /* Color Palette - Professional Light Mode */
+  --background: #fafafa;
+  /* Very light gray, almost white */
+  --foreground: #111827;
+  /* Near black for high contrast text */
+
   --card: #ffffff;
-  --card-foreground: #0f172a;
-  
+  --card-foreground: #111827;
+
   --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  
-  --primary: #0f172a; /* Sleek Slate 900 */
-  --primary-foreground: #f8fafc;
-  
-  --secondary: #e2e8f0; /* Slate 200 */
-  --secondary-foreground: #1e293b; /* Slate 800 */
-  
-  --muted: #f1f5f9; /* Slate 100 */
-  --muted-foreground: #64748b; /* Slate 500 */
-  
-  --accent: #f1f5f9;
-  --accent-foreground: #0f172a;
-  
-  --brand: #3b82f6; /* Vibrant Blue for accents/brand touches */
+  --popover-foreground: #111827;
+
+  --primary: #000000;
+  /* Crisp black for primary actions */
+  --primary-foreground: #ffffff;
+
+  --secondary: #f3f4f6;
+  /* Gray 100 for secondary buttons/surfaces */
+  --secondary-foreground: #1f2937;
+  /* Gray 800 */
+
+  --muted: #f9fafb;
+  /* Gray 50 */
+  --muted-foreground: #6b7280;
+  /* Gray 500 for secondary text */
+
+  --accent: #f3f4f6;
+  --accent-foreground: #111827;
+
+  --brand: #2563eb;
+  /* Professional blue anchor */
   --brand-foreground: #ffffff;
-  
+
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
 
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #3b82f6;
+  --border: #e5e7eb;
+  /* Gray 200 - crisp lines */
+  --input: #e5e7eb;
+  --ring: #2563eb;
 
-  --radius: 0.75rem; /* Friendlier, rounder corners */
+  /* Sharper radiuses */
+  --radius-sm: 0.25rem;
+  --radius: 0.5rem;
+  --radius-lg: 0.75rem;
 
-  /* Shadows for depth */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  /* Crisp, minimal shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 
-  /* Status Colors */
-  --status-draft: #f59e0b; /* Amber 500 */
-  --status-approved: #3b82f6; /* Blue 500 */
-  --status-scheduled: #8b5cf6; /* Violet 500 */
-  --status-posted: #10b981; /* Emerald 500 */
-  --status-error: #ef4444; /* Red 500 */
+  /* Precise Status Colors */
+  --status-draft: #f59e0b;
+  --status-approved: #2563eb;
+  --status-scheduled: #8b5cf6;
+  --status-posted: #10b981;
+  --status-error: #ef4444;
 
-  /* Spacing */
+  /* Consistent Spacing */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
   --spacing-md: 1rem;
@@ -56,40 +68,7 @@
   --spacing-2xl: 3rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #020817; /* Deep slate background */
-    --foreground: #f8fafc;
-    
-    --card: #0f172a; /* Darker slate for cards */
-    --card-foreground: #f8fafc;
-    
-    --popover: #0f172a;
-    --popover-foreground: #f8fafc;
-    
-    --primary: #f8fafc; /* Inverted primary */
-    --primary-foreground: #020817;
-    
-    --secondary: #1e293b; /* Slate 800 */
-    --secondary-foreground: #f8fafc;
-    
-    --muted: #1e293b;
-    --muted-foreground: #94a3b8; /* Slate 400 */
-    
-    --accent: #1e293b;
-    --accent-foreground: #f8fafc;
-    
-    --brand: #3b82f6;
-    --brand-foreground: #ffffff;
-    
-    --destructive: #ef4444;
-    --destructive-foreground: #f8fafc;
-
-    --border: #1e293b;
-    --input: #1e293b;
-    --ring: #3b82f6;
-  }
-}
+/* Removed prefer-color-scheme: dark to lock the application into light mode. */
 
 * {
   box-sizing: border-box;
@@ -107,27 +86,71 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   line-height: 1.25;
   margin-bottom: var(--spacing-sm);
+  letter-spacing: -0.025em;
+  /* Professional tight tracking on headers */
 }
 
 p {
-  line-height: 1.6;
+  line-height: 1.5;
   margin-bottom: var(--spacing-md);
+  color: var(--muted-foreground);
+  font-size: 0.9375rem;
+  /* Clean, highly-readable paragraph size */
 }
 
 a {
   color: inherit;
   text-decoration: none;
-  transition: color 0.2s;
+  transition: color 0.15s ease;
 }
 
-/* Utility to hide scrollbar but keep functionality */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Base list hover */
+.list-row:hover {
+  background-color: var(--muted);
+}
+
+/* Professional thin scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;

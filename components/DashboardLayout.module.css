@@ -2,25 +2,25 @@
     display: flex;
     min-height: 100vh;
     background-color: var(--background);
-    /* Main app shell runs a darker/muted background */
-    padding: var(--spacing-md);
+    /* Remove padding on right and bottom so the main canvas can "bleed" */
+    padding: var(--spacing-md) 0 0 var(--spacing-md);
     gap: var(--spacing-md);
+    overflow: hidden;
+    /* Prevent container level scroll */
 }
 
 .main {
     flex: 1;
     margin-left: 280px;
-    /* Sidebar is 280px wide */
     background-color: var(--card);
-    /* The content canvas uses the bright/solid card background */
-    border-radius: 1.5rem;
-    /* Generous rounding for the island */
+    /* Only round the left edge to make it look like it's coming out of the right */
+    border-radius: 1.5rem 0 0 0;
     border: 1px solid var(--border);
-    min-height: calc(100vh - 2 * var(--spacing-md));
+    border-right: none;
+    border-bottom: none;
+    min-height: calc(100vh - var(--spacing-md));
     padding: var(--spacing-2xl);
-    /* Inner canvas breathing room */
-    box-shadow: var(--shadow-md);
-    /* Give the island depth */
+    box-shadow: var(--shadow-xl);
     overflow-y: auto;
     overflow-x: auto;
     min-width: 0;

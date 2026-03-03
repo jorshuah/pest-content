@@ -50,33 +50,42 @@ export default function AccountsClient({ initialAccounts }: AccountsClientProps)
 
     return (
         <div>
-            <header style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                    <h1 style={{ fontSize: "1.5rem", fontWeight: "700", letterSpacing: "-0.025em", color: "var(--foreground)" }}>Accounts</h1>
+            <header style={{ marginBottom: "var(--spacing-lg)", paddingBottom: "var(--spacing-sm)", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <h1 style={{ fontSize: "1.5rem", fontWeight: "700", letterSpacing: "-0.025em", color: "var(--foreground)", margin: 0 }}>Accounts</h1>
+                    <span style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>Manage active social media profiles</span>
                 </div>
                 <button
                     onClick={handleAdd}
                     style={{
-                        backgroundColor: "var(--brand)",
-                        color: "var(--brand-foreground)",
-                        padding: "0.5rem 1rem",
-                        borderRadius: "var(--radius)",
-                        border: "none",
-                        fontWeight: "600",
+                        backgroundColor: "var(--primary)",
+                        color: "var(--primary-foreground)",
+                        padding: "0.625rem 1rem",
+                        borderRadius: "var(--radius-sm)",
+                        border: "1px solid var(--primary)",
+                        fontWeight: "500",
+                        fontSize: "0.875rem",
                         cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
                         gap: "0.5rem",
-                        boxShadow: "var(--shadow-sm)",
-                        transition: "all 0.2s ease"
+                        transition: "all 0.15s ease"
+                    }}
+                    onMouseOver={(e) => {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                        e.currentTarget.style.color = "var(--primary)";
+                    }}
+                    onMouseOut={(e) => {
+                        e.currentTarget.style.backgroundColor = "var(--primary)";
+                        e.currentTarget.style.color = "var(--primary-foreground)";
                     }}
                 >
-                    <Plus size={18} />
+                    <Plus size={16} />
                     Add Account
                 </button>
             </header>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1.5rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "var(--spacing-md)", alignItems: "start" }}>
                 {initialAccounts.map((account) => (
                     <AccountCard key={account.id} account={account} onEdit={handleEdit} />
                 ))}

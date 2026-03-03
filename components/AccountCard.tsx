@@ -1,5 +1,5 @@
 import styles from "./AccountCard.module.css";
-import { Facebook, Instagram, Linkedin, MapPin, MoreHorizontal } from "lucide-react";
+import { Facebook, Instagram, Video, MapPin, MoreHorizontal } from "lucide-react";
 import { Account } from "@/types";
 
 interface AccountCardProps {
@@ -68,11 +68,11 @@ export default function AccountCard({ account, onEdit }: AccountCardProps) {
             </div>
 
             <div className={styles.footer}>
-                <span className={styles.groupBadge}>Group {account.group}</span>
+                <span className={styles.groupBadge}>{account.group}</span>
                 <div className={styles.platformIcons}>
                     {account.platform.includes('FB') && <Facebook size={16} color="var(--muted-foreground)" />}
                     {account.platform.includes('IG') && <Instagram size={16} color="var(--muted-foreground)" />}
-                    {account.platform.includes('In') && <Linkedin size={16} color="var(--muted-foreground)" />}
+                    {account.platform.includes('TT') && <Video size={16} color="var(--muted-foreground)" />}
                 </div>
             </div>
         </div>

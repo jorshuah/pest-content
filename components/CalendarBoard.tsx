@@ -12,6 +12,10 @@ interface CalendarBoardProps {
     onBatchClick?: (batch: CalendarBatch) => void;
 }
 
+import { Check } from "lucide-react";
+
+const MAX_VISIBLE_ITEMS = 4;
+
 export default function CalendarBoard({ currentDate, batches, onMonthChange, onBatchClick }: CalendarBoardProps) {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -21,7 +25,7 @@ export default function CalendarBoard({ currentDate, batches, onMonthChange, onB
     // Exclude Sundays: 6-column grid (Mon–Sat). Leading empties: Sun=0, Mon=0, Tue=1, ..., Sat=5
     const leadingEmpties = firstDay === 0 ? 0 : firstDay - 1;
 
-    const batchByDay = new Map<number, CalendarBatch>();
+    const batchByDay = new Map<number, CalendarBoardProps['batches'][0]>();
     for (const b of batches) {
         const d = new Date(b.date).getDate();
         batchByDay.set(d, b);
@@ -30,33 +34,46 @@ export default function CalendarBoard({ currentDate, batches, onMonthChange, onB
     const days = [];
     // Empty slots for alignment (Mon–Sat grid, no Sunday)
     for (let i = 0; i < leadingEmpties; i++) {
-        days.push(<div key={`empty-${i}`} className={styles.dayCell} style={{ backgroundColor: "var(--secondary)", opacity: 0.5 }} />);
+        days.push(<div key={`empty-${i}`} className={styles.dayCell} style={{ backgroundColor: "var(--background)", opacity: 0.3 }} />);
     }
 
     // Days of the month (skip Sundays)
     for (let d = 1; d <= daysInMonth; d++) {
         if (new Date(year, month, d).getDay() === 0) continue; // Skip Sunday
         const batch = batchByDay.get(d);
+        const profiles = batch?.profiles || [];
+        const visibleProfiles = profiles.slice(0, MAX_VISIBLE_ITEMS);
+        const remainingCount = profiles.length - MAX_VISIBLE_ITEMS;
 
         days.push(
             <div key={d} className={styles.dayCell}>
                 <span className={styles.dayNumber}>{d}</span>
-                {batch && batch.profiles.length > 0 && (
-                    <div
-                        className={styles.batch}
-                        onClick={() => onBatchClick?.(batch)}
-                        title={batch.profiles.map(p => `${p.account.name} (${p.county})`).join(', ')}
-                    >
-                        <span className={styles.batchProfiles}>
-                            {batch.profiles.map(p => {
-                                const shortName = p.account.name.length > 16 ? p.account.name.slice(0, 14) + '…' : p.account.name;
-                                return (
-                                    <span key={p.account.id} className={styles.batchProfile}>
-                                        {shortName} ({p.county})
-                                    </span>
-                                );
-                            })}
-                        </span>
+                {profiles.length > 0 && (
+                    <div className={styles.chipContainer}>
+                        {visibleProfiles.map((p: any) => {
+                            const brandColor = p.account.brandColor || "#2563eb";
+                            return (
+                                <div
+                                    key={p.account.id}
+                                    className={`${styles.chip} ${p.isPosted ? styles.chipPosted : ''}`}
+                                    style={{
+                                        backgroundColor: p.isPosted ? undefined : `${brandColor}15`,
+                                        borderColor: p.isPosted ? undefined : `${brandColor}30`,
+                                        color: p.isPosted ? undefined : brandColor,
+                                        borderLeft: p.isPosted ? undefined : `3px solid ${brandColor}`
+                                    }}
+                                    onClick={() => onBatchClick?.(batch!)}
+                                >
+                                    {p.isPosted && <Check size={10} style={{ marginRight: '4px' }} />}
+                                    <span className={styles.chipText}>{p.account.name}</span>
+                                </div>
+                            );
+                        })}
+                        {remainingCount > 0 && (
+                            <div className={styles.moreLink} onClick={() => onBatchClick?.(batch!)}>
+                                +{remainingCount} more
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

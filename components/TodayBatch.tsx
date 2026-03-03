@@ -46,15 +46,19 @@ export default function TodayBatch({ profiles }: TodayBatchProps) {
                             {account.name.charAt(0)}
                         </div>
                         <div className={styles.profileContent}>
-                            <span className={styles.accountName}>{account.name}</span>
-                            <span className={styles.county}>
-                                <MapPin size={12} />
-                                {county}
-                            </span>
+                            <div className={styles.accountInfo}>
+                                <span className={styles.accountName}>{account.name}</span>
+                                <span className={styles.county}>
+                                    <MapPin size={12} />
+                                    {county}
+                                </span>
+                            </div>
                             <div className={styles.pestRow}>
-                                <Bug size={14} />
-                                <span className={styles.pestLabel}>{suggestedPest}</span>
-                                <span className={styles.toneBadge}>{tone}</span>
+                                <div className={styles.pestTag}>
+                                    <Bug size={14} className={styles.pestIcon} />
+                                    <span>{suggestedPest}</span>
+                                </div>
+                                <span className={styles.toneBadge}>{tone} tone</span>
                                 {isPosted && (
                                     <span className={styles.postedBadge} title="Posted">
                                         <CheckCircle2 size={14} />
@@ -62,7 +66,6 @@ export default function TodayBatch({ profiles }: TodayBatchProps) {
                                     </span>
                                 )}
                             </div>
-                            <span className={styles.pestReason}>{pestReason}</span>
                         </div>
                         <ChevronRight size={18} className={styles.chevron} />
                     </Link>

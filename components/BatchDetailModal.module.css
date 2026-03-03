@@ -1,0 +1,521 @@
+.overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 1rem;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.modal {
+    background-color: var(--card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    width: 100%;
+    max-width: 1080px;
+    /* Expanded for workspace */
+    height: 90vh;
+    /* Taller for dedicated work area */
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-xl);
+    position: relative;
+    overflow: hidden;
+    animation: slideUp 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.99);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.splitLayout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.sidebar {
+    width: 300px;
+    border-right: 1px solid var(--border);
+    background-color: var(--background);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.mainWorkspace {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    background-color: var(--card);
+}
+
+.sidebarHeader {
+    padding: 0.75rem 1rem;
+    height: 3.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sidebarTitle {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted-foreground);
+}
+
+.sidebarContent {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.accountNavItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 1rem;
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid var(--border-subtle);
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s ease;
+    position: relative;
+}
+
+.accountNavItem:hover {
+    background-color: var(--muted);
+}
+
+.accountNavItem.selected {
+    background-color: var(--card);
+    border-right-color: transparent;
+    /* Seamless with content */
+}
+
+.accountNavItem.selected::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: var(--brand);
+}
+
+.navAvatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.625rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.navAccountName {
+    flex: 1;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--foreground);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.statusIndicator {
+    flex-shrink: 0;
+    color: var(--muted-foreground);
+}
+
+.statusIndicator.completed {
+    color: var(--status-posted);
+}
+
+.header {
+    padding: 0 1.5rem;
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    background-color: var(--background);
+}
+
+.closeButton {
+    padding: 0.5rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    background-color: transparent;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.closeButton:hover {
+    background-color: var(--muted);
+    color: var(--foreground);
+    border-color: var(--border);
+}
+
+.dateKicker {
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted-foreground);
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 0.0625rem;
+}
+
+.title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--foreground);
+    line-height: 1.2;
+    margin: 0;
+}
+
+.subtitle {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+}
+
+.content {
+    padding: 0;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.workspaceLayout {
+    display: flex;
+    min-height: 100%;
+}
+
+.primaryColumn {
+    flex: 1;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    border-right: 1px solid var(--border);
+}
+
+.controlPanel {
+    width: 280px;
+    padding: 1.25rem;
+    background-color: var(--muted);
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    flex-shrink: 0;
+}
+
+.generateButton {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--primary);
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+}
+
+.generateButton:hover:not(:disabled) {
+    background-color: transparent;
+    color: var(--primary);
+}
+
+.generateButton:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+}
+
+.nameHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 2px;
+}
+
+.accountName {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--foreground);
+}
+
+.accountMeta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.metaItem {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    line-height: 1.4;
+    /* Better for wrapping long lines */
+}
+
+.metaIcon {
+    opacity: 0.7;
+    flex-shrink: 0;
+    margin-top: 1px;
+    /* Align with first line of text */
+}
+
+.pestText {
+    color: var(--foreground);
+    font-weight: 500;
+}
+
+.toneBadge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    background-color: var(--secondary);
+    color: var(--secondary-foreground);
+    border: 1px solid var(--border);
+}
+
+/* Tone-specific tints if needed */
+.toneBadge.urgent {
+    background-color: #fef2f2;
+    color: #991b1b;
+    border-color: #fee2e2;
+}
+
+.toneBadge.educational {
+    background-color: #f0f9ff;
+    color: #075985;
+    border-color: #e0f2fe;
+}
+
+.toneBadge.promotional {
+    background-color: #f5f3ff;
+    color: #5b21b6;
+    border-color: #ede9fe;
+}
+
+/* Unused chevron classes removed */
+
+.statusButton {
+    padding: 0.75rem 1rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--muted-foreground);
+    border-left: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+
+.statusButton:hover:not(:disabled) {
+    background-color: var(--muted);
+    color: var(--foreground);
+}
+
+.statusButton.posted {
+    color: var(--status-posted);
+}
+
+.detailsPanel {
+    padding: 1.25rem;
+    border-top: 1px solid var(--border);
+    background-color: var(--background);
+    /* Slightly inset feel */
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.detailSection {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.sectionLabel {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted-foreground);
+    font-weight: 700;
+    white-space: nowrap;
+    flex: 1;
+    margin-bottom: 0.5rem;
+}
+
+.sectionLabel::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background-color: var(--border-subtle);
+}
+
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.copyButton {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--brand);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+}
+
+.copyButton:hover {
+    background-color: var(--brand-faded);
+}
+
+.copyButton.copied {
+    color: var(--status-posted);
+}
+
+.recipeBox {
+    padding: 0.875rem;
+    background-color: var(--card);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    font-size: 0.875rem;
+    color: var(--foreground);
+    white-space: pre-wrap;
+    line-height: 1.6;
+    font-family: var(--font-mono), monospace;
+    /* Code-like feel for recipes */
+}
+
+.contentTitle {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--foreground);
+    margin-bottom: 0.5rem;
+}
+
+.contentHook {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.contentBody {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--foreground);
+    white-space: pre-wrap;
+}
+
+.imageUploadBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 0.875rem;
+    border-radius: var(--radius-sm);
+    border: 1px dashed var(--border);
+    background-color: var(--card);
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    transition: all 0.15s ease;
+}
+
+.imageUploadBtn:hover:not(.disabled) {
+    border-color: var(--ring);
+    color: var(--foreground);
+    background-color: var(--muted);
+}
+
+.imageUploadBtn.disabled {
+    opacity: 0.7;
+    cursor: wait;
+}

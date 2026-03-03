@@ -44,6 +44,9 @@ export function initDb() {
   try {
     db.exec(`ALTER TABLE posts ADD COLUMN tone TEXT`);
   } catch (e) { /* ignore */ }
+  try {
+    db.exec(`ALTER TABLE posts ADD COLUMN image_path TEXT`);
+  } catch (e) { /* ignore */ }
 
   // Create seasonal_pests table (AI-generated, replaces hardcoded SEASONAL_DATA)
   db.exec(`
@@ -87,6 +90,11 @@ export function initDb() {
     )
   `);
 
+  // Migration: LinkedIn (In) -> TikTok (TT)
+  try {
+    db.prepare(`UPDATE accounts SET platform = REPLACE(platform, '"In"', '"TT"') WHERE platform LIKE '%"In"%'`).run();
+  } catch (e) { /* ignore */ }
+
   // Seed data if empty
   const count = db.prepare('SELECT count(*) as count FROM accounts').get() as { count: number };
   if (count.count === 0) {
@@ -101,7 +109,7 @@ export function initDb() {
       { id: "3", name: "Pest Guard 247", location: "Brooklyn, NY", group: "Brooklyn", platform: JSON.stringify(["FB", "IG"]), monthlyPostTarget: 8, currentMonthPosts: 0, brandColor: "#ea580c", status: "active" },
       { id: "4", name: "Swift Exterminators", location: "Queens, NY", group: "Queens", platform: JSON.stringify(["FB", "IG"]), monthlyPostTarget: 8, currentMonthPosts: 0, brandColor: "#9333ea", status: "active" },
       { id: "5", name: "Bronx Pest Control Now", location: "Bronx, NY", group: "Bronx", platform: JSON.stringify(["FB", "IG"]), monthlyPostTarget: 8, currentMonthPosts: 0, brandColor: "#dc2626", status: "active" },
-      { id: "6", name: "Manhattan Pest Control Now", location: "Manhattan, NY", group: "Manhattan", platform: JSON.stringify(["FB", "IG", "In"]), monthlyPostTarget: 12, currentMonthPosts: 0, brandColor: "#2563eb", status: "active" },
+      { id: "6", name: "Manhattan Pest Control Now", location: "Manhattan, NY", group: "Manhattan", platform: JSON.stringify(["FB", "IG", "TT"]), monthlyPostTarget: 8, currentMonthPosts: 0, brandColor: "#2563eb", status: "active" },
       { id: "7", name: "Emergency Pest Squad", location: "Manhattan, NY", group: "Manhattan", platform: JSON.stringify(["FB", "IG"]), monthlyPostTarget: 8, currentMonthPosts: 0, brandColor: "#0f172a", status: "active" },
       { id: "8", name: "Fast Response Pest Services", location: "Westchester County, NY", group: "Westchester", platform: JSON.stringify(["FB", "IG"]), monthlyPostTarget: 8, currentMonthPosts: 0, brandColor: "#16a34a", status: "active" },
       { id: "9", name: "Nassau Pest Control Now", location: "Nassau County, NY", group: "Nassau", platform: JSON.stringify(["FB", "IG"]), monthlyPostTarget: 8, currentMonthPosts: 0, brandColor: "#ca8a04", status: "active" },
@@ -111,7 +119,7 @@ export function initDb() {
       { id: "13", name: "Fast Action Pest Control Services", location: "Suffolk County, NY", group: "Suffolk", platform: JSON.stringify(["FB", "IG"]), monthlyPostTarget: 8, currentMonthPosts: 0, brandColor: "#16a34a", status: "active" },
       { id: "14", name: "Emergency Pest Now", location: "New Jersey", group: "NJ", platform: JSON.stringify(["FB", "IG"]), monthlyPostTarget: 8, currentMonthPosts: 0, brandColor: "#0f172a", status: "active" },
       { id: "15", name: "Rockland Pest Control Now", location: "Rockland, NY", group: "Rockland", platform: JSON.stringify(["FB", "IG"]), monthlyPostTarget: 8, currentMonthPosts: 0, brandColor: "#9333ea", status: "active" },
-      { id: "16", name: "Lordicap Exterminating", location: "General", group: "Main", platform: JSON.stringify(["FB", "IG", "In"]), monthlyPostTarget: 15, currentMonthPosts: 0, brandColor: "#2563eb", status: "active" }
+      { id: "16", name: "Lordicap Exterminating", location: "General", group: "Main", platform: JSON.stringify(["FB", "IG", "TT"]), monthlyPostTarget: 8, currentMonthPosts: 0, brandColor: "#2563eb", status: "active" }
     ];
 
     for (const account of mockAccounts) {

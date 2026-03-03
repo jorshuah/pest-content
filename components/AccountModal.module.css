@@ -4,40 +4,27 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.4);
+    /* Solid, semi-transparent black without blur */
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 100;
-    backdrop-filter: blur(4px);
 }
 
 .modal {
     background-color: var(--card);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
     width: 100%;
     max-width: 500px;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    animation: slideIn 0.2s ease-out;
-}
-
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px) scale(0.95);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+    box-shadow: var(--shadow-lg);
 }
 
 .header {
-    padding: var(--spacing-lg);
+    padding: var(--spacing-lg) var(--spacing-xl);
     border-bottom: 1px solid var(--border);
     display: flex;
     justify-content: space-between;
@@ -55,7 +42,7 @@
     cursor: pointer;
     color: var(--muted-foreground);
     padding: 4px;
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
 }
 
 .closeButton:hover {
@@ -64,16 +51,17 @@
 }
 
 .form {
-    padding: var(--spacing-lg);
+    padding: var(--spacing-xl);
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--spacing-lg);
+    /* Ensure sufficient spacing between major groups */
 }
 
 .formGroup {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: 6px;
 }
 
 .label {
@@ -84,18 +72,20 @@
 
 .input,
 .select {
-    padding: 0.5rem 0.75rem;
+    padding: 0.625rem 0.75rem;
+    /* Slightly taller inputs for better click targets */
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     background-color: var(--background);
     color: var(--foreground);
     font-size: 0.875rem;
+    transition: border-color 0.15s ease;
 }
 
 .input:focus,
 .select:focus {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
+    outline: none;
+    border-color: var(--ring);
 }
 
 .checkboxGroup {
@@ -112,38 +102,41 @@
 }
 
 .footer {
-    padding: var(--spacing-lg);
+    padding: var(--spacing-lg) var(--spacing-xl);
     border-top: 1px solid var(--border);
     display: flex;
     justify-content: flex-end;
-    gap: var(--spacing-md);
-    background-color: var(--secondary);
+    gap: var(--spacing-sm);
+    background-color: var(--muted);
 }
 
 .button {
     padding: 0.5rem 1rem;
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
-    border: 1px solid transparent;
+    transition: all 0.15s ease;
 }
 
 .cancelButton {
     background-color: transparent;
-    border-color: var(--border);
+    border: 1px solid var(--border);
     color: var(--foreground);
 }
 
 .cancelButton:hover {
     background-color: var(--background);
+    border-color: var(--muted-foreground);
 }
 
 .saveButton {
     background-color: var(--primary);
     color: var(--primary-foreground);
+    border: 1px solid var(--primary);
 }
 
 .saveButton:hover {
-    opacity: 0.9;
+    background-color: transparent;
+    color: var(--primary);
 }

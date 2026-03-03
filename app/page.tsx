@@ -11,11 +11,11 @@ export default async function Home() {
 
   return (
     <DashboardClient>
-      <div className={styles.bentoTodaysBatch}>
-        <TodayBatch profiles={todaysBatch} />
-      </div>
       <div className={styles.bentoStats}>
         <DashboardStats />
+      </div>
+      <div className={styles.bentoTodaysBatch}>
+        <TodayBatch profiles={todaysBatch} />
       </div>
       <div className={styles.bentoFocus}>
         <SeasonalFocus />
