@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pest Content Generator
 
-## Getting Started
+A tool for pest control companies to generate creative social media content using AI.
 
-First, run the development server:
+## 🚀 Quick Start (For Windows Users)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+If you are on Windows and want to run this locally:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1.  **Run the Launcher**: Double-click the `Launcher.bat` file in this folder.
+2.  **Follow Setup**: 
+    - If you don't have **Node.js** installed, it will open the download page for you. Please install it and run the launcher again.
+    - It will ask for a **Gemini API Key**. You can get one for free at [Google AI Studio](https://aistudio.google.com/app/apikey).
+3.  **Wait for Launch**: The script will automatically install everything and open the app in your browser at `http://localhost:3042`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🛠 Features
 
-## Learn More
+- **Automated Rotation**: Schedules content based on seasonal pest priorities.
+- **AI-Powered**: Uses Gemini 1.5 Flash to generate unique, scroll-stopping social media posts.
+- **Local First**: Built with Next.js and SQLite, keeping your data local and fast.
+- **Dashboard**: Track reach, engagement, and post status at a glance.
 
-To learn more about Next.js, take a look at the following resources:
+## 👨‍💻 Technical Details (For Developers)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This project uses:
+- **Framework**: [Next.js](https://nextjs.org/)
+- **AI**: [Vercel AI SDK](https://sdk.vercel.ai/) with Google Gemini
+- **Database**: SQLite (via `better-sqlite3`)
+- **Styling**: Tailwind CSS
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Manual Setup
 
-## Deploy on Vercel
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. Create a `.env.local` file and add your API Key:
+   ```env
+   GOOGLE_GENERATION_AI_API_KEY=your_api_key_here
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. Run the development server:
+   ```bash
+   npm run dev
+   ```
+
+4. Open [http://localhost:3042](http://localhost:3042) in your browser.

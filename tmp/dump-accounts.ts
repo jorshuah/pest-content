@@ -1,4 +1,4 @@
-import { getAccounts } from './lib/repository';
+import { getAccounts } from '../lib/repository';
 
 async function dump() {
     const accounts = getAccounts();
