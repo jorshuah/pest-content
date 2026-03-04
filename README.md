@@ -2,15 +2,25 @@
 
 A tool for pest control companies to generate creative social media content using AI.
 
-## 🚀 Quick Start (For Windows Users)
+## 🚀 Quick Start (Local Setup)
 
-If you are on Windows and want to run this locally:
+To run this project locally, follow these steps:
 
-1.  **Run the Launcher**: Double-click the `Launcher.bat` file in this folder.
-2.  **Follow Setup**: 
-    - If you don't have **Node.js** installed, it will open the download page for you. Please install it and run the launcher again.
-    - It will ask for a **Gemini API Key**. You can get one for free at [Google AI Studio](https://aistudio.google.com/app/apikey).
-3.  **Wait for Launch**: The script will automatically install everything and open the app in your browser at `http://localhost:3042`.
+1.  **Clone the project** to your machine.
+2.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
+3.  **Set up API Key**: Create a `.env.local` file in the root and add your Google Gemini API Key:
+    ```env
+    GOOGLE_GENERATION_AI_API_KEY=your_api_key_here
+    ```
+    Get a key for free at [Google AI Studio](https://aistudio.google.com/app/apikey).
+4.  **Run the app**:
+    ```bash
+    npm run dev
+    ```
+5.  **Open in browser**: Go to [http://localhost:3042](http://localhost:3042).
 
 ---
 
